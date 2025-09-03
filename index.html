@@ -1,1184 +1,914 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hearing Aid Selection</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #26A69A 0%, #E0F7FA 100%);
-            overflow-x: hidden;
-            font-size: 16px;
-            position: relative;
-        }
-        .wave-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.1;
-        }
-        .wave-bg svg {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 20vh;
-            fill: #4DB6AC;
-            animation: wave 10s infinite linear;
-        }
-        @keyframes wave {
-            0% { transform: translateX(0); }
-            50% { transform: translateX(-25%); }
-            100% { transform: translateX(0); }
-        }
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-        }
-        .selections {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(38, 166, 154, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #E0F7FA;
-            border-radius: 3px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            background: #4DB6AC;
-            width: 0;
-            transition: width 0.5s ease;
-        }
-        .selection-group {
-            margin-bottom: 30px;
-            background: #F5FAFA;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border: 1px solid #E0F7FA;
-        }
-        .selection-group h2 {
-            color: #26A69A;
-            font-size: 20px;
-            margin-top: 0;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #4DB6AC;
-            padding-bottom: 5px;
-        }
-        .paired-group {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .paired-group .selection-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        label {
-            font-weight: 600;
-            color: #37474F;
-            display: block;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        .inline-options {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .options-grid, .goals-grid, .tech-grid, .accessories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px;
-        }
-        .brand-grid, .substyle-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 15px;
-        }
-        .option-card, .goal-card, .tech-card, .brand-card, .substyle-card, .accessory-card {
-            background: white;
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            border: 1px solid #E0F7FA;
-            font-size: 14px;
-            min-height: 66.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .substyle-card[data-substyle="thintube"],
-        .substyle-card[data-substyle="thicktube"],
-        .accessory-card[data-accessory="others"] {
-            min-height: 59.85px;
-        }
-        .option-card:hover, .goal-card:hover, .tech-card:hover, .brand-card:hover, .accessory-card:hover:not(.disabled) {
-            box-shadow: 0 6px 12px rgba(38, 166, 154, 0.3);
-            border-color: #26A69A;
-        }
-        .substyle-card:hover, .accessory-card[data-accessory="others"]:hover:not(.disabled) {
-            box-shadow: 0 6px 12px rgba(38, 166, 154, 0.3);
-            border-color: #26A69A;
-        }
-        .option-card.selected, .goal-card.selected, .tech-card.recommended, .tech-card.selected, .brand-card.selected, .substyle-card.selected, .accessory-card.selected {
-            background: #26A69A;
-            color: white;
-            box-shadow: 0 6px 12px rgba(38, 166, 154, 0.4);
-            border: 1px solid #00897B;
-        }
-        .option-card.disabled, .tech-card.disabled, .substyle-card.disabled, .accessory-card.disabled {
-            background: #ECEFF1;
-            color: #B0BEC5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-        .goal-card img {
-            width: 25px;
-            height: 25px;
-            margin-bottom: 5px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            filter: hue-rotate(180deg) saturate(2) brightness(1.5);
-        }
-        .tooltip {
-            visibility: hidden;
-            width: 100px;
-            background: #37474F;
-            color: white;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -50px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 12px;
-        }
-        .option-card:hover .tooltip, .goal-card:hover .tooltip, .tech-card:hover .tooltip, .brand-card:hover .tooltip, .substyle-card:hover .tooltip, .accessory-card:hover:not(.disabled) .tooltip {
-            visibility: visible;
-            opacity: 1;
-        }
-        button {
-            background: #26A69A;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            display: block;
-            margin: 20px auto;
-            font-size: 16px;
-            box-shadow: 0 4px 10px rgba(38, 166, 154, 0.3);
-            transition: all 0.3s ease;
-        }
-        button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 15px rgba(38, 166, 154, 0.5);
-        }
-        .price-summary {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(38, 166, 154, 0.2);
-            border: 2px solid #26A69A;
-            margin-top: 20px;
-            backdrop-filter: blur(10px);
-        }
-        .price-summary h3 {
-            color: #26A69A;
-            text-align: center;
-            margin-bottom: 20px;
-            font-weight: 600;
-            font-size: 18px;
-        }
-        .price-breakdown {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-        }
-        .price-card, .calculation-card {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            min-width: 100px;
-            text-align: center;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            color: #000000;
-        }
-        .calculation-card {
-            background: #E0F7FA;
-            width: 100%;
-            margin-top: 15px;
-            font-size: 15px;
-            color: #000000;
-        }
-        .price-card.teal-text {
-            color: #26A69A;
-        }
-        .price-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(38, 166, 154, 0.3);
-        }
-        .recommendation-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            color: #000000;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-        .recommendation-table th, .recommendation-table td {
-            padding: 12px;
-            text-align: center;
-            border: 1px solid #E0F7FA;
-            font-size: 14px;
-        }
-        .recommendation-table th {
-            background: #26A69A;
-            color: white;
-            font-weight: 600;
-        }
-        .recommendation-table tr:nth-child(even) {
-            background: #F5FAFA;
-        }
-        .header-info {
-            margin-bottom: 20px;
-        }
-        .header-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: space-between;
-            width: 100%;
-        }
-        .insurance-input, .accessories-subgroup, .manual-discount, .appy-promo, .client-info {
-            display: none;
-            margin-top: 15px;
-        }
-        .insurance-input input, .manual-discount input, .appy-promo input {
-            padding: 9px;
-            border-radius: 7.2px;
-            border: 1px solid #B0BEC5;
-            width: 162px;
-            font-size: 12.6px;
-            box-shadow: inset 0 1.8px 3.6px rgba(0,0,0,0.05);
-        }
-        .client-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .client-info span {
-            font-size: 14px;
-            color: #37474F;
-            padding: 5px;
-            border-bottom: 1px solid #B0BEC5;
-            min-width: 150px;
-            display: inline-block;
-        }
-        .client-info span[contenteditable="true"]:focus {
-            outline: none;
-            border-bottom: 1px solid #26A69A;
-        }
-        .date-info {
-            margin-left: auto;
-        }
-        #brandSection, #subStyleSection {
-            display: none;
-        }
-        #subStyleSection {
-            margin-top: 20px;
-        }
-        canvas#confetti {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 100;
-        }
-        .validity-note, .audika-advantage, .audika-link, .terms-conditions {
-            text-align: left;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #37474F;
-        }
-        .audika-advantage ul {
-            margin: 5px 0 0 20px;
-            padding: 0;
-            font-size: 14px;
-        }
-        .audika-advantage li {
-            margin-bottom: 5px;
-        }
-        .audika-link {
-            font-size: 12px;
-            color: #26A69A;
-        }
-        .audika-link a {
-            color: #26A69A;
-            text-decoration: none;
-        }
-        .audika-link a:hover {
-            text-decoration: underline;
-        }
-        .terms-conditions {
-            font-size: 12px;
-        }
-        .additional-costs-teal {
-            color: #26A69A;
-        }
-        @media print {
-            body { background: white; }
-            .selections, .progress-bar, .wave-bg, canvas#confetti { display: none; }
-            .price-summary { 
-                width: 100%; 
-                border: none; 
-                box-shadow: none; 
-                background: white; 
-                padding: 10px; 
-                font-size: 14px; 
-                backdrop-filter: none; 
-            }
-            .price-summary h3 { color: black; }
-            .price-card, .calculation-card { 
-                border: 1px solid #ccc; 
-                box-shadow: none; 
-                min-width: 80px; 
-                font-size: 12px; 
-            }
-            .calculation-card { background: white; color: black; }
-            .recommendation-table { 
-                border: 1px solid #ccc; 
-                box-shadow: none; 
-            }
-            .recommendation-table th, .recommendation-table td { 
-                border: 1px solid #ccc; 
-                font-size: 12px; 
-            }
-            .recommendation-table th { background: #ccc; color: black; }
-            .client-info { display: flex; }
-            .audika-advantage, .audika-link { 
-                color: black; 
-                font-size: 12px; 
-            }
-            .audika-advantage ul { 
-                margin: 5px 0 0 15px; 
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hearing Aid Selection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    body{
+      font-family:'Poppins',sans-serif; margin:0; padding:20px;
+      background:linear-gradient(135deg,#26A69A 0%,#E0F7FA 100%);
+      overflow-x:hidden; font-size:16px; position:relative;
+    }
+    .wave-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;opacity:.1;}
+    .wave-bg svg{position:absolute;bottom:0;width:100%;height:20vh;fill:#4DB6AC;animation:wave 10s infinite linear;}
+    @keyframes wave{0%{transform:translateX(0)}50%{transform:translateX(-25%)}100%{transform:translateX(0)}}
+    .container{max-width:1200px;margin:20px auto;}
+    .selections{
+      background:rgba(255,255,255,.95);padding:30px;border-radius:15px;
+      box-shadow:0 8px 20px rgba(38,166,154,.2);backdrop-filter:blur(10px);
+    }
+    .progress-bar{width:100%;height:6px;background:#E0F7FA;border-radius:3px;margin-bottom:20px;overflow:hidden;}
+    .progress{height:100%;background:#4DB6AC;width:0;transition:width .5s ease;}
+    .selection-group{
+      margin-bottom:30px;background:#F5FAFA;padding:20px;border-radius:10px;
+      box-shadow:0 4px 10px rgba(0,0,0,.05);border:1px solid #E0F7FA;
+    }
+    .selection-group h2{
+      color:#26A69A;font-size:20px;margin:0 0 15px;border-bottom:2px solid #4DB6AC;padding-bottom:5px;
+    }
+    .paired-group{display:flex;gap:15px;flex-wrap:wrap;}
+    .paired-group .selection-group{flex:1;margin-bottom:0;}
+    label{font-weight:600;color:#37474F;display:block;margin-bottom:10px;font-size:16px;}
+    .inline-options{display:flex;gap:15px;flex-wrap:wrap;}
+    .options-grid,.goals-grid,.tech-grid,.accessories-grid{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:15px;
+    }
+    .brand-grid,.substyle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:15px;}
+    .option-card,.goal-card,.tech-card,.brand-card,.substyle-card,.accessory-card{
+      background:#fff;padding:12px;border-radius:10px;text-align:center;cursor:pointer;
+      transition:all .3s ease;box-shadow:0 3px 6px rgba(0,0,0,.1);border:1px solid #E0F7FA;
+      font-size:14px;min-height:66.5px;display:flex;align-items:center;justify-content:center; position:relative;
+    }
+    .substyle-card[data-substyle="thintube"],
+    .substyle-card[data-substyle="thicktube"],
+    .accessory-card[data-accessory="others"]{min-height:59.85px;}
+    .option-card:hover,.goal-card:hover,.tech-card:hover,.brand-card:hover,.accessory-card:hover:not(.disabled),
+    .substyle-card:hover,.accessory-card[data-accessory="others"]:hover:not(.disabled){
+      box-shadow:0 6px 12px rgba(38,166,154,.3);border-color:#26A69A;
+    }
+    .option-card.selected,.goal-card.selected,.tech-card.recommended,.tech-card.selected,.brand-card.selected,.substyle-card.selected,.accessory-card.selected{
+      background:#26A69A;color:#fff;box-shadow:0 6px 12px rgba(38,166,154,.4);border:1px solid #00897B;
+    }
+    .option-card.disabled,.tech-card.disabled,.substyle-card.disabled,.accessory-card.disabled{
+      background:#ECEFF1;color:#B0BEC5;cursor:not-allowed;pointer-events:none;
+    }
+    .goal-card img{width:25px;height:25px;margin:0 auto 5px;filter:hue-rotate(180deg) saturate(2) brightness(1.5);}
+    .tooltip{
+      visibility:hidden;width:140px;background:#37474F;color:#fff;text-align:center;border-radius:6px;
+      padding:5px;position:absolute;z-index:5;bottom:110%;left:50%;transform:translateX(-50%);
+      opacity:0;transition:opacity .2s;font-size:12px;pointer-events:none;
+    }
+    .option-card:hover .tooltip,.goal-card:hover .tooltip,.tech-card:hover .tooltip,.brand-card:hover .tooltip,.substyle-card:hover .tooltip,.accessory-card:hover:not(.disabled) .tooltip{
+      visibility:visible;opacity:1;
+    }
+    button{
+      background:#26A69A;color:#fff;padding:12px 30px;border:none;border-radius:10px;cursor:pointer;
+      display:block;margin:20px auto;font-size:16px;box-shadow:0 4px 10px rgba(38,166,154,.3);transition:all .3s ease;
+    }
+    button:hover{transform:scale(1.05);box-shadow:0 6px 15px rgba(38,166,154,.5);}
+    .price-summary{
+      background:rgba(255,255,255,.95);padding:20px;border-radius:15px;
+      box-shadow:0 8px 20px rgba(38,166,154,.2);border:2px solid #26A69A;margin-top:20px;backdrop-filter:blur(10px);
+    }
+    .price-summary h3{color:#26A69A;text-align:center;margin:10px 0 20px;font-weight:600;font-size:18px;}
+    .price-card,.calculation-card{background:#fff;padding:12px;border-radius:8px;box-shadow:0 3px 6px rgba(0,0,0,.1);min-width:100px;text-align:center;transition:all .3s ease;font-size:14px;color:#000;}
+    .calculation-card{background:#E0F7FA;width:100%;margin-top:15px;font-size:15px;color:#000;}
+    .price-card.teal-text{color:#26A69A;}
+    .price-card:hover{transform:translateY(-5px);box-shadow:0 6px 12px rgba(38,166,154,.3);}
+    .recommendation-table{width:100%;border-collapse:collapse;margin-top:10px;color:#000;background:#fff;border-radius:8px;box-shadow:0 3px 6px rgba(0,0,0,.1);}
+    .recommendation-table th,.recommendation-table td{padding:12px;text-align:center;border:1px solid #E0F7FA;font-size:14px;}
+    .recommendation-table th{background:#26A69A;color:#fff;font-weight:600;}
+    .recommendation-table tr:nth-child(even){background:#F5FAFA;}
+
+    .quote-bar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+    .quote-left .client-info{display:none;flex-direction:column;align-items:flex-start;gap:4px;}
+    .quote-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+
+    /* Logo */
+    .quote-logo{
+      display:block; height:44px; width:auto; max-width:220px; object-fit:contain; image-rendering:auto;
+    }
+
+    .header-info{margin-bottom:20px;}
+    .header-row{display:flex;flex-wrap:wrap;gap:15px;justify-content:space-between;width:100%;}
+    .insurance-input,.accessories-subgroup,.manual-discount,.discount-input{display:none;margin-top:15px;}
+    .insurance-input input,.manual-discount input,.discount-input input{
+      padding:9px;border-radius:7.2px;border:1px solid #B0BEC5;width:220px;font-size:12.6px;box-shadow:inset 0 1.8px 3.6px rgba(0,0,0,.05);
+    }
+    .client-info span{font-size:14px;color:#37474F;padding:5px;border-bottom:1px solid #B0BEC5;min-width:180px;display:inline-block;}
+    .client-info span[contenteditable="true"]:focus{outline:none;border-bottom:1px solid #26A69A;}
+    .date-info{font-size:14px;color:#37474F;border-bottom:1px solid #B0BEC5;min-width:120px;padding:5px;display:inline-block;text-align:right;}
+
+    #brandSection,#subStyleSection,#chargersSection{display:none;}
+    #subStyleSection{margin-top:20px;}
+    canvas#confetti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
+
+    .validity-note,.audika-advantage,.audika-link,.terms-conditions{text-align:left;margin-top:15px;font-size:14px;color:#37474F;}
+    .audika-advantage ul{margin:5px 0 0 20px;padding:0;font-size:14px;}
+    .audika-link{font-size:12px;color:#26A69A;}
+    .audika-link a{color:#26A69A;text-decoration:none;}
+    .audika-link a:hover{text-decoration:underline;}
+    .terms-conditions{font-size:12px;}
+    .additional-costs-teal{color:#26A69A;}
+
+    .selections-summary{background:#fff;padding:12px;border-radius:8px;box-shadow:0 3px 6px rgba(0,0,0,.1);margin-top:15px;font-size:14px;color:#000;text-align:left;}
+    .selections-summary h4{color:#26A69A;margin-bottom:10px;font-size:16px;}
+    .selections-summary ul{margin:5px 0 0 20px;padding:0;font-size:14px;}
+    .selections-summary li{margin-bottom:5px;}
+
+    @media print{
+      body{background:#fff;}
+      .selections,.progress-bar,.wave-bg,canvas#confetti{display:none;}
+      .price-summary{width:100%;border:none;box-shadow:none;background:#fff;padding:10px;font-size:14px;backdrop-filter:none;}
+      .quote-logo{height:32px;}
+      .price-summary h3{color:black;}
+      .price-card,.calculation-card,.selections-summary{border:1px solid #ccc;box-shadow:none;min-width:80px;font-size:12px;}
+      .calculation-card{background:#fff;color:#000;}
+      .recommendation-table{border:1px solid #ccc;box-shadow:none;}
+      .recommendation-table th,.recommendation-table td{border:1px solid #ccc;font-size:12px;}
+      .recommendation-table th{background:#ccc;color:black;}
+      .selections-summary{background:#fff;color:#000;}
+      .selections-summary h4{color:#000;}
+      .quote-left .client-info{display:flex !important;}
+      .audika-advantage,.audika-link{color:black;font-size:12px;}
+      .audika-advantage ul{margin:5px 0 0 15px;}
+    }
+  </style>
 </head>
 <body>
-    <div class="wave-bg">
-        <svg viewBox="0 0 1440 320">
-            <path d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,181.3C672,171,768,181,864,197.3C960,213,1056,235,1152,229.3C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-        </svg>
-    </div>
-    <div class="container">
-        <div class="selections">
-            <div class="progress-bar">
-                <div class="progress" id="progress"></div>
-            </div>
+  <div class="wave-bg">
+    <svg viewBox="0 0 1440 320">
+      <path d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,181.3C672,171,768,181,864,197.3C960,213,1056,235,1152,229.3C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,240,48,320L0,320Z"></path>
+    </svg>
+  </div>
 
-            <!-- Products and Brand -->
-            <div class="selection-group">
-                <h2>Products & Brand</h2>
-                <div class="paired-group">
-                    <div class="selection-group">
-                        <label>Products:</label>
-                        <div class="inline-options">
-                            <div class="option-card" data-range="demant">Demant</div>
-                            <div class="option-card" data-range="nondemant">Non-Demant</div>
-                        </div>
-                    </div>
-                    <div class="selection-group" id="brandSection">
-                        <label>Brand:</label>
-                        <div class="inline-options" id="brandGrid"></div>
-                    </div>
-                </div>
-            </div>
+  <div class="container">
+    <div class="selections">
+      <div class="progress-bar"><div class="progress" id="progress"></div></div>
 
-            <!-- Fitting and Charge -->
-            <div class="selection-group" id="fitting">
-                <h2>Fitting & Charge</h2>
-                <div class="paired-group">
-                    <div class="selection-group">
-                        <label>Fitting:</label>
-                        <div class="inline-options">
-                            <div class="option-card" data-fitting="binaural">Binaural<span class="tooltip">Two aids</span></div>
-                            <div class="option-card" data-fitting="monaural">Monaural<span class="tooltip">One aid</span></div>
-                        </div>
-                    </div>
-                    <div class="selection-group">
-                        <label>Charge:</label>
-                        <div class="inline-options">
-                            <div class="option-card" data-recharge="rechargeable">Rechargeable<span class="tooltip">No batteries</span></div>
-                            <div class="option-card" data-recharge="non-rechargeable">Non-Rechargeable<span class="tooltip">Batteries</span></div>
-                        </div>
-                    </div>
-                </div>
+      <!-- Products and Brand -->
+      <div class="selection-group">
+        <h2>Products & Brand</h2>
+        <div class="paired-group">
+          <div class="selection-group">
+            <label>Products:</label>
+            <div class="inline-options">
+              <div class="option-card" data-range="demant">Demant</div>
+              <div class="option-card" data-range="non-demant">Non-Demant</div>
             </div>
-
-            <!-- Style and Acoustic Coupling -->
-            <div class="selection-group" id="style">
-                <h2>Style & Coupling</h2>
-                <div class="paired-group">
-                    <div class="selection-group">
-                        <label>Style:</label>
-                        <div class="inline-options">
-                            <div class="option-card" data-style="bte">BTE<span class="tooltip">Behind Ear</span></div>
-                            <div class="option-card" data-style="rite">RITE<span class="tooltip">Receiver In The Ear</span></div>
-                            <div class="option-card" data-style="custom">Custom<span class="tooltip">In-ear</span></div>
-                        </div>
-                        <div class="substyle-grid" id="subStyleSection"></div>
-                    </div>
-                    <div class="selection-group">
-                        <label>Acoustic Coupling:</label>
-                        <div class="inline-options">
-                            <div class="option-card" data-coupling="encased">Encased<span class="tooltip">Enclosed fit</span></div>
-                            <div class="option-card" data-coupling="moulds">Moulds<span class="tooltip">Custom fit</span></div>
-                            <div class="option-card" data-coupling="domes">Domes<span class="tooltip">Standard fit</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Funding Option -->
-            <div class="selection-group" id="funding">
-                <h2>Funding Options</h2>
-                <label>Funding Option:</label>
-                <div class="options-grid">
-                    <div class="option-card" data-funding="moh">MoH Subsidy<span class="tooltip">Ministry</span></div>
-                    <div class="option-card" data-funding="acc1">ACC Band 1<span class="tooltip">Low-tier</span></div>
-                    <div class="option-card" data-funding="acc2">ACC Band 2<span class="tooltip">Mid-tier</span></div>
-                    <div class="option-card" data-funding="acc3">ACC Band 3<span class="tooltip">High-tier</span></div>
-                    <div class="option-card" data-funding="private">Private<span class="tooltip">No funding</span></div>
-                    <div class="option-card" data-funding="insurance">Insurance<span class="tooltip">Custom</span></div>
-                </div>
-                <div id="insuranceAmountDiv" class="insurance-input">
-                    <input type="number" id="insuranceAmount" placeholder="Enter insurance amount" min="0">
-                </div>
-            </div>
-
-            <!-- Listening Goals -->
-            <div class="selection-group" id="goals">
-                <h2>Listening Goals</h2>
-                <label>Listening Goals (Click all that apply):</label>
-                <div class="goals-grid" style="grid-template-columns: repeat(4, 1fr);">
-                    <div class="goal-card" data-goal="onetoone"><img src="https://img.icons8.com/ios-filled/40/000000/user.png" alt="One-to-One">1:1<span class="tooltip">Personal</span></div>
-                    <div class="goal-card" data-goal="everyday"><img src="https://img.icons8.com/ios-filled/40/000000/globe.png" alt="Everyday">Everyday sounds<span class="tooltip">Daily life</span></div>
-                    <div class="goal-card" data-goal="tv"><img src="https://img.icons8.com/ios-filled/40/000000/tv.png" alt="TV">TV<span class="tooltip">Television</span></div>
-                    <div class="goal-card" data-goal="tinnitus"><img src="https://img.icons8.com/ios-filled/40/000000/bell.png" alt="Tinnitus">Tinnitus<span class="tooltip">Ringing</span></div>
-                    <div class="goal-card" data-goal="phone"><img src="https://img.icons8.com/ios-filled/40/000000/phone.png" alt="Phone">Phone<span class="tooltip">Calls</span></div>
-                    <div class="goal-card" data-goal="wind"><img src="https://img.icons8.com/ios-filled/40/000000/wind.png" alt="Wind">Wind<span class="tooltip">Outdoors</span></div>
-                    <div class="goal-card" data-goal="streaming"><img src="https://img.icons8.com/ios-filled/40/000000/video.png" alt="Streaming">Streaming<span class="tooltip">Audio</span></div>
-                    <div class="goal-card" data-goal="smallgroup"><img src="https://img.icons8.com/ios-filled/40/000000/family.png" alt="Small Group">Small group<span class="tooltip">Family</span></div>
-                    <div class="goal-card" data-goal="group"><img src="https://img.icons8.com/ios-filled/40/000000/chat.png" alt="Large Group">Large group<span class="tooltip">Multi-speaker</span></div>
-                    <div class="goal-card" data-goal="meetings"><img src="https://img.icons8.com/ios-filled/40/000000/calendar.png" alt="Meetings">Work meetings<span class="tooltip">Work</span></div>
-                    <div class="goal-card" data-goal="church"><img src="https://img.icons8.com/ios-filled/40/000000/church.png" alt="Church">Church<span class="tooltip">Worship</span></div>
-                    <div class="goal-card" data-goal="crowd"><img src="https://img.icons8.com/ios-filled/40/000000/crowd.png" alt="Crowd">Crowds<span class="tooltip">Public spaces</span></div>
-                    <div class="goal-card" data-goal="dining"><img src="https://img.icons8.com/ios-filled/40/000000/restaurant.png" alt="Dining">Dining out<span class="tooltip">Restaurants</span></div>
-                    <div class="goal-card" data-goal="noisywork"><img src="https://img.icons8.com/ios-filled/40/000000/factory.png" alt="Work">Noisy work<span class="tooltip">Loud places</span></div>
-                    <div class="goal-card" data-goal="music_theatre"><img src="https://img.icons8.com/ios-filled/40/000000/musical.png" alt="Music Theatre">Music Theatre<span class="tooltip">Theatre</span></div>
-                    <div class="goal-card" data-goal="social"><img src="https://img.icons8.com/ios-filled/40/000000/conference.png" alt="Social Gatherings">Social gatherings<span class="tooltip">Parties</span></div>
-                </div>
-            </div>
-
-            <!-- Technology Levels -->
-            <div class="selection-group" id="tech">
-                <h2>Technology Levels</h2>
-                <label>Technology Levels (Recommended highlighted):</label>
-                <div class="tech-grid" id="techGrid"></div>
-            </div>
-
-            <!-- Accessories -->
-            <div class="selection-group" id="accessories">
-                <h2>Accessories</h2>
-                <label>Accessories (Optional):</label>
-                <div class="options-grid">
-                    <div class="accessory-card" data-accessory="others">Others<span class="tooltip">Add extras</span></div>
-                </div>
-                <div id="accessoriesSubgroup" class="accessories-subgroup">
-                    <div class="accessories-grid">
-                        <div class="accessory-card" data-accessory="usb_adaptor">USB Adaptor<span class="tooltip">$250</span></div>
-                        <div class="accessory-card" data-accessory="connect_clip">ConnectClip<span class="tooltip">$395</span></div>
-                        <div class="accessory-card" data-accessory="phone_adaptor">Phone Adaptor 2.0<span class="tooltip">$359</span></div>
-                        <div class="accessory-card" data-accessory="tv_adaptor">TV Adaptor 3.0<span class="tooltip">$350</span></div>
-                        <div class="accessory-card" data-accessory="remote_control">Remote Control 3.0<span class="tooltip">$295</span></div>
-                        <div class="accessory-card" data-accessory="edu_mic">EduMic<span class="tooltip">$1395</span></div>
-                        <div class="accessory-card" data-accessory="easy_le_adapter">Easy LE Adapter<span class="tooltip">$175</span></div>
-                    </div>
-                </div>
-                <div id="chargersSection" class="accessories-subgroup">
-                    <div class="accessories-grid">
-                        <div class="accessory-card" data-accessory="ot_intent_charger">OT Intent Charger<span class="tooltip">$400</span></div>
-                        <div class="accessory-card" data-accessory="ot_intent_smart_charger">OT Intent Smart<span class="tooltip">$550</span></div>
-                        <div class="accessory-card" data-accessory="ot_standard_charger">OT Standard Charger<span class="tooltip">$400</span></div>
-                        <div class="accessory-card" data-accessory="ot_smart_charger">OT Smart Charger<span class="tooltip">$550</span></div>
-                        <div class="accessory-card" data-accessory="other_charger">Other Charger<span class="tooltip">$450</span></div>
-                    </div>
-                </div>
-                <button id="calculateButton">Calculate Price</button>
-            </div>
+          </div>
+          <div class="selection-group" id="brandSection">
+            <label>Brand:</label>
+            <div class="inline-options" id="brandGrid"></div>
+          </div>
         </div>
+      </div>
 
-        <div class="price-summary" id="priceDisplay">
-            <h3>Your Hearing Aid Options</h3>
-            <div class="client-info">
-                <span id="clientName" contenteditable="true">Client Name</span>
-                <span id="clinicName" contenteditable="true">Clinic Name</span>
-                <span id="dateInput" contenteditable="true" class="date-info">Date</span>
+      <!-- Fitting and Charge -->
+      <div class="selection-group" id="fitting">
+        <h2>Fitting & Charge</h2>
+        <div class="paired-group">
+          <div class="selection-group">
+            <label>Fitting:</label>
+            <div class="inline-options">
+              <div class="option-card" data-fitting="binaural">Binaural<span class="tooltip">Two aids</span></div>
+              <div class="option-card" data-fitting="monaural">Monaural<span class="tooltip">One aid</span></div>
             </div>
-            <div id="priceOutput"></div>
-            <div id="insuranceAmountDiv" class="insurance-input">
-                <input type="number" id="insuranceAmount" placeholder="Enter insurance amount" min="0">
+          </div>
+          <div class="selection-group">
+            <label>Charge:</label>
+            <div class="inline-options">
+              <div class="option-card" data-recharge="rechargeable">Rechargeable<span class="tooltip">No batteries</span></div>
+              <div class="option-card" data-recharge="non-rechargeable">Non-Rechargeable<span class="tooltip">Battery powered</span></div>
             </div>
-            <div id="manualDiscountDiv" class="manual-discount">
-                <input type="number" id="manualDiscount" placeholder="Enter discount amount" min="0">
-            </div>
-            <div id="appyPromoDiv" class="appy-promo">
-                <input type="text" id="promoCode" placeholder="Apply Promo">
-            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Style and Acoustic Coupling -->
+      <div class="selection-group" id="style">
+        <h2>Style & Acoustic Coupling</h2>
+        <div class="paired-group">
+          <div class="selection-group">
+            <label>Style:</label>
+            <div class="inline-options">
+              <div class="option-card" data-style="bte">BTE<span class="tooltip">Behind Ear</span></div>
+              <div class="option-card" data-style="rite">RITE<span class="tooltip">Receiver In Ear</span></div>
+              <div class="option-card" data-style="custom">Custom<span class="tooltip">In-ear design</span></div>
+            </div>
+            <div class="substyle-grid" id="subStyleSection"></div>
+          </div>
+          <div class="selection-group">
+            <label>Acoustic Coupling:</label>
+            <div class="inline-options">
+              <div class="option-card" data-coupling="encased">Encased<span class="tooltip">Enclosed fit</span></div>
+              <div class="option-card" data-coupling="moulds">Moulds<span class="tooltip">Custom fit</span></div>
+              <div class="option-card" data-coupling="domes">Domes<span class="tooltip">Standard fit</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Funding Options -->
+      <div class="funding" id="funding">
+        <h2>Funding Options</h2>
+        <label>Funding Options:</label>
+        <div class="options-grid">
+          <div class="option-card" data-funding="moh">MoH Subsidy<span class="tooltip">Ministry funding</span></div>
+          <div class="option-card" data-funding="acc1">ACC Band 1<span class="tooltip">Low-tier</span></div>
+          <div class="option-card" data-funding="acc2">ACC Band 2<span class="tooltip">Mid-tier funding</span></div>
+          <div class="option-card" data-funding="acc3">ACC Band 3<span class="tooltip">High-tier funding</span></div>
+          <div class="option-card" data-funding="private">Private<span class="tooltip">No funding</span></div>
+          <div class="option-card" data-funding="insurance">Insurance<span class="tooltip">Custom amount</span></div>
+        </div>
+        <div id="funding-insurance" class="insurance-input">
+          <input id="funding-amount" type="number" placeholder="Enter insurance amount" min="0"/>
+        </div>
+      </div>
+
+      <!-- Listening Goals -->
+      <div class="selection-group" id="goals">
+        <h2>Listening Goals</h2>
+        <label>Listening Goals (Select all that apply):</label>
+        <div class="goals-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="goal-card" data-goal="onetoone"><img src="https://img.icons8.com/ios-filled/40/000000/user.png" alt="One-to-One">1:1<span class="tooltip">Personal</span></div>
+          <div class="goal-card" data-goal="everyday"><img src="https://img.icons8.com/ios-filled/40/000000/globe.png" alt="Everyday">Everyday sounds<span class="tooltip">Daily life</span></div>
+          <div class="goal-card" data-goal="tv"><img src="https://img.icons8.com/ios-filled/40/000000/tv.png" alt="TV">TV<span class="tooltip">Television</span></div>
+          <div class="goal-card" data-goal="tinnitus"><img src="https://img.icons8.com/ios-filled/40/000000/bell.png" alt="Tinnitus">Tinnitus<span class="tooltip">Ringing relief</span></div>
+          <div class="goal-card" data-goal="phone"><img src="https://img.icons8.com/ios-filled/40/000000/phone.png" alt="Phone">Phone<span class="tooltip">Calls</span></div>
+          <div class="goal-card" data-goal="wind"><img src="https://img.icons8.com/ios-filled/40/000000/wind.png" alt="Wind">Wind<span class="tooltip">Outdoors</span></div>
+          <div class="goal-card" data-goal="streaming"><img src="https://img.icons8.com/ios-filled/40/000000/video.png" alt="Streaming">Streaming<span class="tooltip">Audio streaming</span></div>
+          <div class="goal-card" data-goal="smallgroup"><img src="https://img.icons8.com/ios-filled/40/000000/family.png" alt="Small Group">Small group<span class="tooltip">Family</span></div>
+          <div class="goal-card" data-goal="group"><img src="https://img.icons8.com/ios-filled/40/000000/chat.png" alt="Large Group">Large group<span class="tooltip">Multi-speaker</span></div>
+          <div class="goal-card" data-goal="meetings"><img src="https://img.icons8.com/ios-filled/40/000000/calendar.png" alt="Meetings">Work meetings<span class="tooltip">Work</span></div>
+          <div class="goal-card" data-goal="church"><img src="https://img.icons8.com/ios-filled/40/000000/church.png" alt="Church">Church<span class="tooltip">Worship</span></div>
+          <div class="goal-card" data-goal="crowd"><img src="https://img.icons8.com/ios-filled/40/000000/crowd.png" alt="Crowd">Crowds<span class="tooltip">Public spaces</span></div>
+          <div class="goal-card" data-goal="dining"><img src="https://img.icons8.com/ios-filled/40/000000/restaurant.png" alt="Dining">Dining out<span class="tooltip">Restaurants</span></div>
+          <div class="goal-card" data-goal="noisywork"><img src="https://img.icons8.com/ios-filled/40/000000/factory.png" alt="Work">Noisy work<span class="tooltip">Loud environments</span></div>
+          <div class="goal-card" data-goal="music_theatre"><img src="https://img.icons8.com/ios-filled/40/000000/musical.png" alt="Music Theatre">Music Theatre<span class="tooltip">Theatre</span></div>
+          <div class="goal-card" data-goal="social"><img src="https://img.icons8.com/ios-filled/40/000000/conference.png" alt="Social">Social gatherings<span class="tooltip">Parties</span></div>
+        </div>
+      </div>
+
+      <!-- Technology Levels -->
+      <div class="selection-group" id="tech">
+        <h2>Technology Levels</h2>
+        <label>Technology Levels (Select to highlight associated Listening Goals):</label>
+        <div class="tech-grid" id="techGrid"></div>
+      </div>
+
+      <!-- Accessories -->
+      <div class="selection-group" id="accessories">
+        <h2>Accessories</h2>
+        <label>Accessories (Optional):</label>
+        <div class="options-grid">
+          <div class="accessory-card" data-accessory="others">Others<span class="tooltip">Add extras</span></div>
+        </div>
+        <div id="accessoriesSubgroup" class="accessories-subgroup">
+          <div class="accessories-grid">
+            <div class="accessory-card" data-accessory="cros_transmitter">CROS Transmitter<span class="tooltip">$1,495</span></div>
+            <div class="accessory-card" data-accessory="cros_px">CROS PX<span class="tooltip">$1,995</span></div>
+            <div class="accessory-card" data-accessory="usb_adaptor">USB Adaptor<span class="tooltip">$250</span></div>
+            <div class="accessory-card" data-accessory="connect_clip">ConnectClip<span class="tooltip">$395</span></div>
+            <div class="accessory-card" data-accessory="phone_adaptor">Phone Adaptor 2.0<span class="tooltip">$359</span></div>
+            <div class="accessory-card" data-accessory="tv_adaptor">TV Adaptor 3.0<span class="tooltip">$350</span></div>
+            <div class="accessory-card" data-accessory="remote_control">Remote Control 3.0<span class="tooltip">$295</span></div>
+            <div class="accessory-card" data-accessory="edu_mic">EduMic<span class="tooltip">$1,395</span></div>
+          </div>
+        </div>
+        <div id="chargersSection" class="accessories-subgroup">
+          <div class="accessories-grid">
+            <div class="accessory-card" data-accessory="ot_intent_charger">OT Intent Charger<span class="tooltip">$400</span></div>
+            <div class="accessory-card" data-accessory="ot_smart_charger">OT Smart Charger<span class="tooltip">$550</span></div>
+            <div class="accessory-card" data-accessory="standard_charger">Standard Charger<span class="tooltip">$400</span></div>
+            <div class="accessory-card" data-accessory="smart_charger">Smart Charger<span class="tooltip">$550</span></div>
+            <div class="accessory-card" data-accessory="non_demant_charger">Non-Demant Charger<span class="tooltip">$450</span></div>
+          </div>
+        </div>
+        <button id="calculateButton">Calculate Price</button>
+      </div>
     </div>
-    <canvas id="confetti"></canvas>
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM fully loaded");
+    <div class="price-summary" id="priceDisplay">
+      <!-- Quote header bar -->
+      <div class="quote-bar">
+        <div class="quote-left">
+          <div class="client-info">
+            <span id="clientName" contenteditable="true">Client Name</span>
+            <span id="clinicName" contenteditable="true">Clinic Name</span>
+          </div>
+        </div>
+        <div class="quote-right">
+          <!-- Logo file in the same folder as index.html -->
+          <img id="audikaLogo" class="quote-logo" alt="Audika" src="./audika-logo.png?v=1" loading="eager" decoding="sync"/>
+          <span id="dateInput" class="date-info" contenteditable="true">12/06/2025</span>
+        </div>
+      </div>
 
-            document.getElementById('calculateButton').addEventListener('click', calculatePrice);
+      <h3>Your Hearing Aid Options</h3>
 
-            document.addEventListener('keydown', (e) => {
-                if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd') {
-                    const discountDiv = document.getElementById('manualDiscountDiv');
-                    discountDiv.style.display = discountDiv.style.display === 'block' ? 'none' : 'block';
-                }
-                if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'p') {
-                    const promoDiv = document.getElementById('appyPromoDiv');
-                    promoDiv.style.display = promoDiv.style.display === 'block' ? 'none' : 'block';
-                }
-            });
+      <div id="priceOutput"></div>
 
-            function setupToggleSelect(selector, multiSelect = false) {
-                document.querySelectorAll(selector).forEach(card => {
-                    card.addEventListener('click', () => {
-                        if (card.classList.contains('disabled')) return;
-                        const group = card.parentElement;
-                        const isSelected = card.classList.contains('selected');
-                        if (!multiSelect) {
-                            group.querySelectorAll(selector).forEach(c => c.classList.remove('selected'));
-                        }
-                        if (!isSelected) {
-                            card.classList.add('selected');
-                        } else {
-                            card.classList.remove('selected');
-                        }
-                        updateProgress();
-                        if (selector === '.option-card[data-range]') updateBrandSection();
-                        if (selector === '.brand-card') updateTechSection();
-                        if (selector === '.option-card[data-style]') updateSubStyleSection();
-                        if (selector === '.option-card[data-recharge]') {
-                            document.getElementById('chargersSection').style.display = card.dataset.recharge === 'rechargeable' && !isSelected ? 'block' : 'none';
-                            updateAccessoriesCompatibility();
-                            updateSubStyleSection();
-                        }
-                        if (selector === '.substyle-card') {
-                            updateTechSectionForSPUP();
-                            updateRechargeability();
-                            updateCoupling();
-                        }
-                        if (selector === '.option-card[data-funding]') {
-                            const insuranceSelected = document.querySelector('.option-card[data-funding="insurance"].selected');
-                            document.getElementById('insuranceAmountDiv').style.display = insuranceSelected ? 'block' : 'none';
-                        }
-                        if (selector === '.tech-card') {
-                            updateGoalsBasedOnTech();
-                            if (isSelected) {
-                                card.classList.remove('recommended');
-                            }
-                        }
-                    });
-                });
-            }
+      <div id="price-insurance" class="insurance-input">
+        <input id="price-insurance-amount" type="number" placeholder="Enter insurance amount" min="0"/>
+      </div>
 
-            setupToggleSelect('.option-card[data-range]');
-            setupToggleSelect('.brand-card');
-            setupToggleSelect('.option-card[data-fitting]');
-            setupToggleSelect('.option-card[data-style]');
-            setupToggleSelect('.substyle-card');
-            setupToggleSelect('.option-card[data-recharge]');
-            setupToggleSelect('.option-card[data-coupling]');
-            setupToggleSelect('.option-card[data-funding]', true);
-            setupToggleSelect('.tech-card');
+      <div id="manualDiscountDiv" class="manual-discount">
+        <input type="number" id="manualDiscount" placeholder="Enter the discount amount in NZD" min="0"/>
+      </div>
+      <div id="discountInputDiv" class="discount-input">
+        <input type="number" id="discountAmount" placeholder="Enter the discount amount in NZD" min="0"/>
+      </div>
+    </div>
+  </div>
 
-            document.querySelectorAll('.goal-card, .accessory-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    if (!card.classList.contains('disabled')) {
-                        const isSelected = card.classList.contains('selected');
-                        if (isSelected) {
-                            card.classList.remove('selected');
-                        } else {
-                            card.classList.add('selected');
-                        }
-                        if (card.classList.contains('goal-card')) updateRecommendations();
-                        updateProgress();
-                    }
-                });
-            });
+  <canvas id="confetti"></canvas>
 
-            document.querySelector('.accessory-card[data-accessory="others"]').addEventListener('click', () => {
-                const isSelected = document.querySelector('.accessory-card[data-accessory="others"]').classList.contains('selected');
-                document.getElementById('accessoriesSubgroup').style.display = isSelected ? 'block' : 'none';
-            });
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      /* Fallback: if logo path is wrong, swap to a placeholder so the layout doesn’t break */
+      (function ensureLogo(){
+        const img = document.getElementById('audikaLogo');
+        if(!img) return;
+        const FALLBACK_SVG_DATA =
+          'data:image/svg+xml;utf8,' +
+          encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="220" height="44" viewBox="0 0 220 44"><rect width="220" height="44" fill="white"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="20" fill="#26A69A">Audika</text></svg>');
+        img.addEventListener('error', () => { img.src = FALLBACK_SVG_DATA; });
+      })();
 
-            function updateBrandSection() {
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
-                const brandGrid = document.getElementById('brandGrid');
-                brandGrid.innerHTML = '';
-                document.getElementById('brandSection').style.display = range ? 'block' : 'none';
-                if (range === 'demant') {
-                    brandGrid.innerHTML = `
-                        <div class="brand-card" data-brand="oticon">Oticon</div>
-                        <div class="brand-card" data-brand="bernafon">Bernafon</div>
-                    `;
-                } else if (range === 'nondemant') {
-                    brandGrid.innerHTML = `
-                        <div class="brand-card" data-brand="phonak">Phonak</div>
-                        <div class="brand-card" data-brand="widex">Widex</div>
-                        <div class="brand-card" data-brand="starkey">Starkey</div>
-                        <div class="brand-card" data-brand="signia">Signia</div>
-                        <div class="brand-card" data-brand="resound">Resound</div>
-                        <div class="brand-card" data-brand="unitron">Unitron</div>
-                    `;
-                }
-                setupToggleSelect('.brand-card');
-                updateTechSection();
-                updateAccessoriesCompatibility();
-            }
+      /* ---------- Event delegation helpers (keeps clicks working even after dynamic HTML changes) ---------- */
+      function delegateToggleSelect(selector, multiSelect = false) {
+        document.addEventListener('click', (e) => {
+          const card = e.target.closest(selector);
+          if (!card) return;
+          if (card.classList.contains('disabled')) return;
 
-            function updateTechSection() {
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
-                const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
-                const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle;
-                const techGrid = document.getElementById('techGrid');
-                techGrid.innerHTML = '';
-                if (range === 'demant' && brand === 'oticon') {
-                    if (substyle === 'sp_up_bte') {
-                        techGrid.innerHTML = `
-                            <div class="tech-card" data-tech="SP_PT">SP PT</div>
-                            <div class="tech-card" data-tech="SP_EHT">SP EHT</div>
-                            <div class="tech-card" data-tech="SP_ET">SP ET</div>
-                        `;
-                    } else {
-                        techGrid.innerHTML = `
-                            <div class="tech-card" data-tech="OT1">OT1</div>
-                            <div class="tech-card" data-tech="OT2">OT2</div>
-                            <div class="tech-card" data-tech="PT1">PT1</div>
-                            <div class="tech-card" data-tech="PT2">PT2</div>
-                            <div class="tech-card" data-tech="EHT1">EHT1</div>
-                            <div class="tech-card" data-tech="EHT2">EHT2</div>
-                            <div class="tech-card" data-tech="ET1">ET1</div>
-                            <div class="tech-card" data-tech="ET2">ET2</div>
-                        `;
-                    }
-                } else if (range === 'demant' && brand === 'bernafon') {
-                    if (substyle === 'sp_up_bte') {
-                        techGrid.innerHTML = `
-                            <div class="tech-card" data-tech="SP_PT">SP PT</div>
-                            <div class="tech-card" data-tech="SP_EHT">SP EHT</div>
-                            <div class="tech-card" data-tech="SP_ET">SP ET</div>
-                        `;
-                    } else {
-                        techGrid.innerHTML = `
-                            <div class="tech-card" data-tech="BF1">BF1</div>
-                            <div class="tech-card" data-tech="BF2">BF2</div>
-                            <div class="tech-card" data-tech="BF3">BF3</div>
-                            <div class="tech-card" data-tech="BF4">BF4</div>
-                        `;
-                    }
-                } else if (range === 'nondemant' && brand) {
-                    techGrid.innerHTML = `
-                        <div class="tech-card" data-tech="Tier1">Tier1</div>
-                        <div class="tech-card" data-tech="Tier2">Tier2</div>
-                        <div class="tech-card" data-tech="Tier3">Tier3</div>
-                        <div class="tech-card" data-tech="Tier4">Tier4</div>
-                        <div class="tech-card" data-tech="Tier5">Tier5</div>
-                    `;
-                }
-                setupToggleSelect('.tech-card');
-                updateRecommendations();
-            }
+          const group = card.parentElement;
+          const isSelected = card.classList.contains('selected');
 
-            function updateTechSectionForSPUP() {
-                const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle;
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
-                const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
-                if (substyle === 'sp_up_bte' && range === 'demant' && (brand === 'oticon' || brand === 'bernafon')) {
-                    updateTechSection();
-                }
-            }
+          if (!multiSelect) {
+            group.querySelectorAll(selector).forEach(c => c.classList.remove('selected'));
+          }
+          if (!isSelected) {
+            card.classList.add('selected');
+          } else if (multiSelect) {
+            card.classList.remove('selected');
+          }
 
-            function updateSubStyleSection() {
-                const style = document.querySelector('.option-card[data-style].selected')?.dataset.style;
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
-                const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
-                const recharge = document.querySelector('.option-card[data-recharge].selected')?.dataset.recharge;
-                const isRechargeable = recharge === 'rechargeable';
-                const subStyleSection = document.getElementById('subStyleSection');
-                subStyleSection.innerHTML = '';
-                document.getElementById('subStyleSection').style.display = style && style !== 'rite' ? 'block' : 'none';
-                if (style === 'bte') {
-                    subStyleSection.innerHTML = `
-                        <div class="substyle-card" data-substyle="thintube">Thin Tube</div>
-                        <div class="substyle-card" data-substyle="thicktube">Thick Tube</div>
-                        <div class="substyle-card" data-substyle="sp_up_bte">SP/UP BTE<span class="tooltip">Non-rechargeable only</span></div>
-                    `;
-                } else if (style === 'custom') {
-                    subStyleSection.innerHTML = `
-                        <div class="substyle-card" data-substyle="ite">ITE</div>
-                        <div class="substyle-card" data-substyle="itc">ITC</div>
-                        <div class="substyle-card" data-substyle="cic">CIC<span class="tooltip">Non-rechargeable only</span></div>
-                        <div class="substyle-card" data-substyle="iic">IIC<span class="tooltip">Non-rechargeable only</span></div>
-                    `;
-                }
-                if (isRechargeable && style === 'custom') {
-                    const isPhonakOrStarkey = range === 'nondemant' && ['phonak', 'starkey'].includes(brand);
-                    document.querySelectorAll('.substyle-card').forEach(card => {
-                        const substyle = card.dataset.substyle;
-                        if (!isPhonakOrStarkey || (isPhonakOrStarkey && !['ite', 'itc'].includes(substyle))) {
-                            card.classList.add('disabled');
-                            card.classList.remove('selected');
-                        }
-                    });
-                }
-                if (isRechargeable && style === 'bte') {
-                    document.querySelector('.substyle-card[data-substyle="sp_up_bte"]').classList.add('disabled');
-                    document.querySelector('.substyle-card[data-substyle="sp_up_bte"]').classList.remove('selected');
-                }
-                setupToggleSelect('.substyle-card');
-                updateCoupling();
-            }
+          updateProgress();
 
-            function updateRechargeability() {
-                const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle;
-                const style = document.querySelector('.option-card[data-style].selected')?.dataset.style;
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
-                const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
-                const rechargeable = document.querySelector('.option-card[data-recharge="rechargeable"]');
-                const nonRechargeable = document.querySelector('.option-card[data-recharge="non-rechargeable"]');
-
-                const isRechargeableAllowed = style === 'custom' && range === 'nondemant' && ['phonak', 'starkey'].includes(brand) && ['ite', 'itc'].includes(substyle);
-                if ((style === 'custom' && !isRechargeableAllowed) || substyle === 'sp_up_bte') {
-                    rechargeable.classList.add('disabled');
-                    rechargeable.classList.remove('selected');
-                    nonRechargeable.classList.add('selected');
-                    nonRechargeable.classList.remove('disabled');
-                    document.getElementById('chargersSection').style.display = 'none';
-                } else {
-                    rechargeable.classList.remove('disabled');
-                    nonRechargeable.classList.remove('disabled');
-                }
-            }
-
-            function updateCoupling() {
-                const style = document.querySelector('.option-card[data-style].selected')?.dataset.style;
-                const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle;
-                const encased = document.querySelector('.option-card[data-coupling="encased"]');
-                const moulds = document.querySelector('.option-card[data-coupling="moulds"]');
-                const domes = document.querySelector('.option-card[data-coupling="domes"]');
-
-                if (style === 'custom') {
-                    encased.classList.add('disabled');
-                    encased.classList.remove('selected');
-                    moulds.classList.add('disabled');
-                    moulds.classList.remove('selected');
-                    domes.classList.add('disabled');
-                    domes.classList.remove('selected');
-                } else if (substyle === 'sp_up_bte') {
-                    encased.classList.add('disabled');
-                    encased.classList.remove('selected');
-                    domes.classList.add('disabled');
-                    domes.classList.remove('selected');
-                    moulds.classList.add('selected');
-                    moulds.classList.remove('disabled');
-                } else {
-                    encased.classList.remove('disabled');
-                    moulds.classList.remove('disabled');
-                    domes.classList.remove('disabled');
-                }
-            }
-
-            function updateAccessoriesCompatibility() {
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
-                const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
-                const isOticon = range === 'demant' && brand === 'oticon';
-                document.querySelectorAll('.accessory-card[data-accessory^="ot_"]').forEach(card => {
-                    card.classList.toggle('disabled', !isOticon);
-                    if (!isOticon) card.classList.remove('selected');
-                });
-            }
-
-            const goalTechMapping = {
-                demant: {
-                    oticon: {},
-                    bernafon: {
-                        BF1: ['dining', 'noisywork', 'crowd', 'group', 'meetings', 'smallgroup', 'wind', 'streaming', 'phone', 'tv', 'onetoone', 'everyday', 'tinnitus'],
-                        BF2: ['group', 'meetings', 'smallgroup', 'wind', 'streaming', 'phone', 'tv', 'onetoone', 'everyday', 'tinnitus'],
-                        BF3: ['phone', 'streaming', 'smallgroup', 'wind', 'tv', 'onetoone', 'everyday', 'tinnitus'],
-                        BF4: ['phone', 'tv', 'onetoone', 'everyday', 'tinnitus']
-                    }
-                },
-                nondemant: {
-                    Tier1: ['dining', 'noisywork', 'crowd', 'group', 'meetings', 'smallgroup', 'wind', 'streaming', 'phone', 'tv', 'onetoone', 'everyday', 'tinnitus'],
-                    Tier2: ['group', 'meetings', 'smallgroup', 'wind', 'streaming', 'phone', 'tv', 'onetoone', 'everyday', 'tinnitus'],
-                    Tier3: ['phone', 'streaming', 'smallgroup', 'wind', 'tv', 'onetoone', 'everyday', 'tinnitus'],
-                    Tier4: ['phone', 'tv', 'onetoone', 'everyday', 'tinnitus'],
-                    Tier5: ['onetoone', 'tv', 'tinnitus']
-                }
-            };
-
-            function updateRecommendations() {
-                const selectedGoals = Array.from(document.querySelectorAll('.goal-card.selected')).map(card => card.dataset.goal);
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
-                const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
-                const techGrid = document.getElementById('techGrid');
-                if (!range || !brand || selectedGoals.length === 0 || range !== 'demant' || brand !== 'oticon') return;
-
-                let recommendedTech = null;
-
-                if (selectedGoals.some(goal => ['crowd', 'social', 'dining', 'music_theatre', 'noisywork'].includes(goal))) {
-                    recommendedTech = 'OT1';
-                } else if (selectedGoals.some(goal => ['group', 'church'].includes(goal))) {
-                    recommendedTech = 'OT2';
-                } else if (selectedGoals.includes('meetings')) {
-                    recommendedTech = 'PT1';
-                } else if (selectedGoals.some(goal => ['streaming', 'smallgroup'].includes(goal))) {
-                    recommendedTech = 'PT2';
-                } else if (selectedGoals.includes('onetoone') && selectedGoals.includes('tv') && selectedGoals.includes('tinnitus') && selectedGoals.includes('everyday') && selectedGoals.includes('phone') && selectedGoals.includes('wind')) {
-                    recommendedTech = 'EHT1';
-                } else if (selectedGoals.includes('onetoone') && selectedGoals.includes('tv') && selectedGoals.includes('tinnitus') && selectedGoals.includes('everyday') && selectedGoals.includes('phone')) {
-                    recommendedTech = 'EHT2';
-                } else if (selectedGoals.includes('onetoone') && selectedGoals.includes('tv') && selectedGoals.includes('tinnitus') && selectedGoals.includes('everyday')) {
-                    recommendedTech = 'ET1';
-                } else if (selectedGoals.includes('onetoone') && selectedGoals.includes('tv') && selectedGoals.includes('tinnitus')) {
-                    recommendedTech = 'ET2';
-                }
-
-                techGrid.querySelectorAll('.tech-card').forEach(card => {
-                    card.classList.remove('recommended');
-                    if (card.dataset.tech === recommendedTech && !card.classList.contains('selected')) {
-                        card.classList.add('recommended');
-                    }
-                });
-            }
-
-            function updateGoalsBasedOnTech() {
-                const selectedTechCard = document.querySelector('.tech-card.selected');
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
-                const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
-                if (!selectedTechCard || !range || !brand) return;
-
-                const tech = selectedTechCard.dataset.tech;
-                const mapping = goalTechMapping[range === 'demant' ? 'demant' : 'nondemant'];
-                const techGoals = mapping[brand]?.[tech] || [];
-
-                document.querySelectorAll('.goal-card').forEach(card => {
-                    card.classList.toggle('selected', techGoals.includes(card.dataset.goal));
-                });
-                updateRecommendations();
-            }
-
-            function updateProgress() {
-                const totalSections = 8;
-                let completed = 0;
-                if (document.querySelector('.option-card[data-range].selected')) completed++;
-                if (document.querySelector('.brand-card.selected')) completed++;
-                if (document.querySelector('.option-card[data-fitting].selected')) completed++;
-                if (document.querySelector('.option-card[data-style].selected')) completed++;
-                if (document.querySelector('.option-card[data-recharge].selected')) completed++;
-                if (document.querySelector('.option-card[data-coupling].selected')) completed++;
-                if (document.querySelector('.option-card[data-funding].selected')) completed++;
-                if (document.querySelector('.tech-card.selected')) completed++;
-                document.getElementById('progress').style.width = `${(completed / totalSections) * 100}%`;
-            }
-
-            const techPrices = {
-                OT1: { binaural: 9998, monaural: 4999 },
-                OT2: { binaural: 8998, monaural: 4499 },
-                PT1: { binaural: 7498, monaural: 3749 },
-                PT2: { binaural: 5898, monaural: 2949 },
-                EHT1: { binaural: 4998, monaural: 2499 },
-                EHT2: { binaural: 3998, monaural: 1999 },
-                ET1: { binaural: 1517.22, monaural: 758.61 },
-                ET2: { binaural: 1022.22, monaural: 511.11 },
-                SP_PT: { binaural: 8498, monaural: 4249 },
-                SP_EHT: { binaural: 6498, monaural: 3249 },
-                SP_ET: { binaural: 3998, monaural: 1999 },
-                BF1: { binaural: 7000, monaural: 3500 },
-                BF2: { binaural: 5500, monaural: 2750 },
-                BF3: { binaural: 4500, monaural: 2250 },
-                BF4: { binaural: 3500, monaural: 1750 },
-                Tier1: { binaural_recharge: 11580, monaural_recharge: 6015, binaural_nonrecharge: 11130, monaural_nonrecharge: 5565 },
-                Tier2: { binaural_recharge: 9900, monaural_recharge: 5175, binaural_nonrecharge: 9450, monaural_nonrecharge: 4725 },
-                Tier3: { binaural_recharge: 6900, monaural_recharge: 3675, binaural_nonrecharge: 6450, monaural_nonrecharge: 3225 },
-                Tier4: { binaural_recharge: 5640, monaural_recharge: 3045, binaural_nonrecharge: 5190, monaural_nonrecharge: 2595 },
-                Tier5: { binaural_recharge: 3600, monaural_recharge: 2025, binaural_nonrecharge: 3150, monaural_nonrecharge: 1575 },
-                starkey_tier1: { binaural_recharge: 11028, monaural_recharge: 5739, binaural_nonrecharge: 10578, monaural_nonrecharge: 5289 },
-                starkey_tier2: { binaural_recharge: 9448, monaural_recharge: 4949, binaural_nonrecharge: 8998, monaural_nonrecharge: 4499 },
-                starkey_tier3: { binaural_recharge: 6448, monaural_recharge: 3449, binaural_nonrecharge: 5998, monaural_nonrecharge: 2999 },
-                starkey_tier4: { binaural_recharge: 5088, monaural_recharge: 2769, binaural_nonrecharge: 4638, monaural_nonrecharge: 2319 },
-                starkey_tier5: { binaural_recharge: 3290, monaural_recharge: 1870, binaural_nonrecharge: 2840, monaural_nonrecharge: 1420 }
-            };
-
-            const accessoriesPrices = {
-                ot_intent_charger: 400,
-                ot_intent_smart_charger: 550,
-                ot_standard_charger: 400,
-                ot_smart_charger: 550,
-                other_charger: 450,
-                usb_adaptor: 250,
-                connect_clip: 395,
-                phone_adaptor: 359,
-                tv_adaptor: 350,
-                remote_control: 295,
-                edu_mic: 1395,
-                easy_le_adapter: 175,
-                domes: 0
-            };
-
-            const couplingPrices = {
-                encased: { binaural: 280, monaural: 140 },
-                moulds: { binaural: 190, monaural: 95 },
-                domes: { binaural: 0, monaural: 0 }
-            };
-
-            const promoCodes = {
-                'SAVE10': 0.10,
-                'SAVE20': 0.20
-            };
-
-            function calculatePrice() {
-                const range = document.querySelector('.option-card[data-range].selected')?.dataset.range || 'N/A';
-                const brand = document.querySelector('.brand-card.selected')?.dataset.brand || 'N/A';
-                const fitting = document.querySelector('.option-card[data-fitting].selected')?.dataset.fitting || 'N/A';
-                const style = document.querySelector('.option-card[data-style].selected')?.dataset.style || 'N/A';
-                const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle || 'N/A';
-                const recharge = document.querySelector('.option-card[data-recharge].selected')?.dataset.recharge || 'N/A';
-                const coupling = document.querySelector('.option-card[data-coupling].selected')?.dataset.coupling || 'N/A';
-                const fundingOptions = Array.from(document.querySelectorAll('.option-card[data-funding].selected')).map(card => card.dataset.funding);
-                let tech = document.querySelector('.tech-card.selected')?.dataset.tech;
-                const recommendedTech = document.querySelector('.tech-card.recommended')?.dataset.tech;
-                const clientName = document.getElementById('clientName').innerText || '';
-                const clinicName = document.getElementById('clinicName').innerText || '';
-                const dateInput = document.getElementById('dateInput').innerText || '';
-                const insuranceAmount = fundingOptions.includes('insurance') ? parseFloat(document.getElementById('insuranceAmount').value) || 0 : 0;
-                const manualDiscount = parseFloat(document.getElementById('manualDiscount').value) || 0;
-                const promoCode = document.getElementById('promoCode')?.value.toUpperCase() || '';
-                const promoDiscount = promoCodes[promoCode] || 0;
-                const selectedAccessories = Array.from(document.querySelectorAll('.accessory-card.selected')).map(card => card.dataset.accessory);
-
-                if (range === 'N/A' || brand === 'N/A' || fitting === 'N/A' || style === 'N/A') {
-                    alert('Please complete all required selections: Products, Brand, Fitting, Style.');
-                    return;
-                }
-
-                if (!tech && recommendedTech) {
-                    tech = recommendedTech;
-                    document.querySelector(`.tech-card[data-tech="${tech}"]`).classList.add('selected');
-                }
-
-                if (!tech) {
-                    alert('Please select a Technology Level or ensure Listening Goals are set.');
-                    return;
-                }
-
-                let priceKey = tech;
-                if (range === 'nondemant' && brand === 'starkey') {
-                    priceKey = `starkey_${tech.toLowerCase()}`;
-                }
-
-                let basePrice = 0;
-                const isRechargeable = recharge === 'rechargeable';
-                const isDemant = range === 'demant';
-                const isSPUPBTE = substyle === 'sp_up_bte';
-                const isOticonPremium = isDemant && brand === 'oticon' && ['OT1', 'OT2', 'PT1', 'PT2', 'SP_PT'].includes(tech);
-
-                if (isDemant || isSPUPBTE) {
-                    basePrice = techPrices[priceKey]?.[fitting] || 0;
-                } else {
-                    const priceType = `${fitting}_${isRechargeable ? 'recharge' : 'nonrecharge'}`;
-                    basePrice = techPrices[priceKey]?.[priceType] || 0;
-                }
-
-                if (basePrice === 0) {
-                    console.error(`Invalid base price for tech: ${priceKey}, fitting: ${fitting}, recharge: ${recharge}`);
-                    alert('Error calculating price. Please verify selections.');
-                    return;
-                }
-
-                let chargerCost = 0;
-                if (isRechargeable && !isOticonPremium && !isSPUPBTE) {
-                    const charger = selectedAccessories.find(acc => acc.includes('charger'));
-                    chargerCost = charger ? accessoriesPrices[charger] : 450;
-                }
-
-                let couplingCost = style === 'custom' ? 0 : couplingPrices[coupling]?.[fitting] || 0;
-
-                let accessoriesCost = selectedAccessories.reduce((sum, acc) => {
-                    const cost = accessoriesPrices[acc] || 0;
-                    if (!acc.includes('charger')) sum += cost;
-                    return sum;
-                }, 0);
-
-                let additionalCosts = accessoriesCost + chargerCost + couplingCost;
-
-                let fundingDiscount = 0;
-                if (fundingOptions.includes('moh')) fundingDiscount += 1022.22;
-                if (fundingOptions.includes('acc1')) fundingDiscount += 3300.10;
-                if (fundingOptions.includes('acc2')) fundingDiscount += 4099.10;
-                if (fundingOptions.includes('acc3')) fundingDiscount += 5215.47;
-                if (fundingOptions.includes('insurance')) fundingDiscount += insuranceAmount;
-
-                let netPrice = basePrice + additionalCosts - fundingDiscount - manualDiscount;
-                let promoDiscountAmount = netPrice * promoDiscount;
-                netPrice -= promoDiscountAmount;
-
-                const techOrder = range === 'demant' && brand === 'oticon' ? ['ET2', 'ET1', 'EHT2', 'EHT1', 'PT2', 'PT1', 'OT2', 'OT1', 'SP_ET', 'SP_EHT', 'SP_PT'] : range === 'demant' ? ['BF4', 'BF3', 'BF2', 'BF1', 'SP_ET', 'SP_EHT', 'SP_PT'] : ['Tier5', 'Tier4', 'Tier3', 'Tier2', 'Tier1'];
-                const currentIndex = techOrder.indexOf(tech);
-                let secondRecommendation = currentIndex > 0 ? techOrder[currentIndex - 1] : (techOrder.length > 1 ? techOrder[1] : tech);
-
-                let secondBasePrice = 0;
-                let secondPriceKey = secondRecommendation;
-                if (range === 'nondemant' && brand === 'starkey') {
-                    secondPriceKey = `starkey_${secondRecommendation.toLowerCase()}`;
-                }
-
-                if (isDemant || isSPUPBTE) {
-                    secondBasePrice = techPrices[secondPriceKey]?.[fitting] || 0;
-                } else {
-                    const priceType = `${fitting}_${isRechargeable ? 'recharge' : 'nonrecharge'}`;
-                    secondBasePrice = techPrices[secondPriceKey]?.[priceType] || 0;
-                }
-
-                let secondNetPrice = secondBasePrice + additionalCosts - fundingDiscount - manualDiscount;
-                let secondPromoDiscountAmount = secondNetPrice * promoDiscount;
-                secondNetPrice -= secondPromoDiscountAmount;
-
-                let additionalDetails = '';
-                if (chargerCost > 0) additionalDetails += `Charger - $${chargerCost.toFixed(2)}<br>`;
-                if (couplingCost > 0) {
-                    if (coupling === 'moulds') additionalDetails += `Moulds - $${couplingCost.toFixed(2)} <small>($95 each)</small><br>`;
-                    else additionalDetails += `${coupling.charAt(0).toUpperCase() + coupling.slice(1)} - $${couplingCost.toFixed(2)}<br>`;
-                }
-                selectedAccessories.forEach(acc => {
-                    const cost = accessoriesPrices[acc] || 0;
-                    if (!acc.includes('charger') && cost > 0) {
-                        additionalDetails += `${acc.replace(/_/g, ' ').replace('ot', 'OT')} - $${cost.toFixed(2)}<br>`;
-                    }
-                });
-
-                let output = `
-                    <div class="header-info">
-                        <div class="header-row">
-                            <div class="price-card teal-text">Fitting: ${fitting.charAt(0).toUpperCase() + fitting.slice(1)}</div>
-                            <div class="price-card teal-text">Charge: ${recharge.charAt(0).toUpperCase() + recharge.slice(1)}</div>
-                            <div class="price-card teal-text">Style: ${style === 'bte' ? 'BTE' : style === 'rite' ? 'RITE' : style}${substyle !== 'N/A' ? ' - ' + substyle.toLowerCase() : ''}</div>
-                            <div class="price-card teal-text">Coupling: ${style === 'custom' ? 'N/A' : coupling.charAt(0).toUpperCase() + coupling.slice(1)}</div>
-                        </div>
-                    </div>
-                    <table class="recommendation-table">
-                        <tr>
-                            <th>Options</th>
-                            <th>Technology</th>
-                            <th>Brand</th>
-                            <th>Base Price</th>
-                            <th>Funding</th>
-                            <th>Accessories</th>
-                            <th>Net Price</th>
-                        </tr>
-                        <tr>
-                            <td>A</td>
-                            <td>${tech}</td>
-                            <td>${brand.charAt(0).toUpperCase() + brand.slice(1)}</td>
-                            <td>$${basePrice.toFixed(2)}</td>
-                            <td>$${fundingDiscount.toFixed(2)}</td>
-                            <td>${additionalCosts > 0 ? `$${additionalCosts.toFixed(2)}` : ''}</td>
-                            <td>$${netPrice.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <td>B</td>
-                            <td>${secondRecommendation}</td>
-                            <td>${brand.charAt(0).toUpperCase() + brand.slice(1)}</td>
-                            <td>$${secondBasePrice.toFixed(2)}</td>
-                            <td>$${fundingDiscount.toFixed(2)}</td>
-                            <td>${additionalCosts > 0 ? `$${additionalCosts.toFixed(2)}` : ''}</td>
-                            <td>$${secondNetPrice.toFixed(2)}</td>
-                        </tr>
-                    </table>
-                    ${additionalCosts > 0 && additionalDetails ? `<div class="price-card additional-costs-teal" style="text-align: left;">Additional costs:<br>${additionalDetails}Total: $${additionalCosts.toFixed(2)}</div>` : ''}
-                    ${manualDiscount > 0 ? `<div class="price-card" style="text-align: left;">Manual Discount: -$${manualDiscount.toFixed(2)}</div>` : ''}
-                    ${promoDiscountAmount > 0 ? `<div class="price-card" style="text-align: left;">Apply Promo (${promoCode}): -$${promoDiscountAmount.toFixed(2)}</div>` : ''}
-                    <div class="validity-note">This quote is valid for 30 days from the date generated<sup>*</sup></div>
-                    <div class="terms-conditions">*Terms and Conditions</div>
-                    <div class="audika-advantage">
-                        <strong>The Audika Advantage<sup>*</sup>:</strong>
-                        <ul>
-                            <li>Device Loss and Damage Cover</li>
-                            <li>60 day change of mind return period</li>
-                            <li>4 Year Device Warranty</li>
-                            <li>Payment Plan</li>
-                        </ul>
-                    </div>
-                    <div class="audika-link">For more details, visit: <a href="https://www.audika.co.nz/terms-and-conditions/audika-advantage">Audika Advantage</a></div>
-                `;
-
-                document.getElementById('priceOutput').innerHTML = output;
-                document.getElementById('priceDisplay').style.display = 'block';
-                document.querySelector('.client-info').style.display = 'flex';
-                document.getElementById('appyPromoDiv').style.display = 'block';
-
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            }
-
-            updateBrandSection();
+          if (selector === '.option-card[data-funding]') {
+            const insuranceSelected = document.querySelector('.option-card[data-funding="insurance"].selected');
+            document.getElementById('funding-insurance').style.display = insuranceSelected ? 'block' : 'none';
+          }
+          if (selector === '.tech-card') {
+            updateGoalsBasedOnTech(card.dataset.tech);
+            if (isSelected) { card.classList.remove('recommended'); }
+          }
+          if (selector === '.option-card[data-range]') updateBrandSection();
+          if (selector === '.brand-card') updateTechSection();
+          if (selector === '.option-card[data-style]') updateSubStyleSection();
+          if (selector === '.option-card[data-recharge]') {
+            document.getElementById('chargersSection').style.display = card.dataset.recharge === 'rechargeable' && !isSelected ? 'block' : 'none';
+            updateAccessoriesChargesCompatibility();
             updateSubStyleSection();
-            updateTechSection();
-            updateProgress();
+          }
+          if (selector === '.substyle-card') { updateTechSectionForSPUP(); updateRechargeabilityForSPUP(); updateCouplingForSPUP(); }
+          if (selector === '.goal-card') { updateRecommendations(); }
+          if (selector === '.accessory-card') { updateAccessoriesChargesCompatibility(); }
         });
-    </script>
+      }
+
+      delegateToggleSelect('.option-card[data-range]');
+      delegateToggleSelect('.brand-card');
+      delegateToggleSelect('.option-card[data-fitting]');
+      delegateToggleSelect('.option-card[data-style]');
+      delegateToggleSelect('.substyle-card');
+      delegateToggleSelect('.option-card[data-recharge]');
+      delegateToggleSelect('.option-card[data-coupling]');
+      delegateToggleSelect('.option-card[data-funding]', true);
+      delegateToggleSelect('.tech-card');
+      delegateToggleSelect('.goal-card', true);
+      delegateToggleSelect('.accessory-card');
+
+      document.getElementById('calculateButton').addEventListener('click', calculatePrice);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+          const discountDiv = document.getElementById('manualDiscountDiv');
+          discountDiv.style.display = discountDiv.style.display === 'block' ? 'none' : 'block';
+        }
+        if (e.ctrlKey && e.key.toLowerCase() === 'p') {
+          const discountDiv = document.getElementById('discountInputDiv');
+          discountDiv.style.display = discountDiv.style.display === 'block' ? 'none' : 'block';
+        }
+      });
+
+      function updateBrandSection() {
+        const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
+        const brandGrid = document.getElementById('brandGrid');
+        brandGrid.innerHTML = '';
+        document.getElementById('brandSection').style.display = range ? 'block' : 'none';
+        if (range === 'demant') {
+          brandGrid.innerHTML = `
+            <div class="brand-card" data-brand="oticon">Oticon</div>
+            <div class="brand-card" data-brand="bernafon">Bernafon</div>
+          `;
+        } else if (range === 'non-demant') {
+          brandGrid.innerHTML = `
+            <div class="brand-card" data-brand="phonak">Phonak</div>
+            <div class="brand-card" data-brand="widex">Widex</div>
+            <div class="brand-card" data-brand="starkey">Starkey</div>
+            <div class="brand-card" data-brand="signia">Signia</div>
+            <div class="brand-card" data-brand="resound">Resound</div>
+          `;
+        }
+        updateTechSection();
+        updateAccessoriesCompatibility();
+      }
+
+      function updateTechSection() {
+        const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
+        const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
+        const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle;
+        const techGrid = document.getElementById('techGrid');
+        techGrid.innerHTML = '';
+        if (range === 'demant' && brand === 'oticon' && substyle !== 'sp_up_bte') {
+          techGrid.innerHTML = `
+            <div class="tech-card" data-tech="OT1">OT1</div>
+            <div class="tech-card" data-tech="OT2">OT2</div>
+            <div class="tech-card" data-tech="PT1">PT1</div>
+            <div class="tech-card" data-tech="PT2">PT2</div>
+            <div class="tech-card" data-tech="EHT1">EHT1</div>
+            <div class="tech-card" data-tech="EHT2">EHT2</div>
+            <div class="tech-card" data-tech="ET1">ET1</div>
+            <div class="tech-card" data-tech="ET2">ET2</div>
+          `;
+        } else if (range === 'demant' && brand === 'bernafon') {
+          techGrid.innerHTML = `
+            <div class="tech-card" data-tech="BF1">BF1</div>
+            <div class="tech-card" data-tech="BF2">BF2</div>
+            <div class="tech-card" data-tech="BF3">BF3</div>
+            <div class="tech-card" data-tech="BF4">BF4</div>
+          `;
+        } else if (range === 'non-demant' && brand) {
+          techGrid.innerHTML = `
+            <div class="tech-card" data-tech="Tier1">Tier1</div>
+            <div class="tech-card" data-tech="Tier2">Tier2</div>
+            <div class="tech-card" data-tech="Tier3">Tier3</div>
+            <div class="tech-card" data-tech="Tier4">Tier4</div>
+            <div class="tech-card" data-tech="Tier5">Tier5</div>
+          `;
+        }
+        updateRecommendations();
+      }
+
+      function updateTechSectionForSPUP() {
+        const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle;
+        const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
+        const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
+        const techGrid = document.getElementById('techGrid');
+
+        if (substyle === 'sp_up_bte' && range === 'demant' && brand === 'oticon') {
+          techGrid.innerHTML = `
+            <div class="tech-card" data-tech="SP_UP_BTE_PT1">PT1</div>
+            <div class="tech-card" data-tech="SP_UP_BTE_EH1">EH1</div>
+            <div class="tech-card" data-tech="SP_UP_BTE_ET1">ET1</div>
+          `;
+          const selectedTech = document.querySelector('.tech-card.selected');
+          if (!selectedTech) { techGrid.querySelector('.tech-card[data-tech="SP_UP_BTE_PT1"]').classList.add('selected'); }
+        } else {
+          updateTechSection();
+        }
+        updateRecommendations();
+      }
+
+      function updateSubStyleSection() {
+        const style = document.querySelector('.option-card[data-style].selected')?.dataset.style;
+        const recharge = document.querySelector('.option-card[data-recharge].selected')?.dataset.recharge;
+        const isRechargeable = recharge === 'rechargeable';
+        const subStyleSection = document.getElementById('subStyleSection');
+        subStyleSection.innerHTML = '';
+        document.getElementById('subStyleSection').style.display = style && style !== 'rite' ? 'block' : 'none';
+        if (style === 'bte') {
+          subStyleSection.innerHTML = `
+            <div class="substyle-card" data-substyle="thintube">Thin Tube</div>
+            <div class="substyle-card" data-substyle="thicktube">Thick Tube</div>
+            <div class="substyle-card" data-substyle="sp_up_bte">SP/UP BTE<span class="tooltip">Non-rechargeable only</span></div>
+          `;
+        } else if (style === 'custom') {
+          subStyleSection.innerHTML = `
+            <div class="substyle-card" data-substyle="ite">ITE</div>
+            <div class="substyle-card" data-substyle="itc">ITC</div>
+            <div class="substyle-card" data-substyle="cic">CIC<span class="tooltip">Non-rechargeable only</span></div>
+            <div class="substyle-card" data-substyle="iic">IIC<span class="tooltip">Non-rechargeable only</span></div>
+          `;
+        }
+        if (isRechargeable) {
+          document.querySelectorAll('.substyle-card[data-substyle="cic"], .substyle-card[data-substyle="iic"], .substyle-card[data-substyle="sp_up_bte"]').forEach(card => {
+            card.classList.add('disabled'); card.classList.remove('selected');
+          });
+        }
+      }
+
+      function updateRechargeabilityForSPUP() {
+        const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle;
+        const rechargeable = document.querySelector('.option-card[data-recharge="rechargeable"]');
+        const nonRechargeable = document.querySelector('.option-card[data-recharge="non-rechargeable"]');
+        if (substyle === 'sp_up_bte') {
+          rechargeable.classList.add('disabled'); rechargeable.classList.remove('selected');
+          nonRechargeable.classList.add('selected'); nonRechargeable.classList.remove('disabled');
+          document.getElementById('chargersSection').style.display = 'none';
+        } else {
+          rechargeable.classList.remove('disabled'); nonRechargeable.classList.remove('disabled');
+        }
+      }
+
+      function updateCouplingForSPUP() {
+        const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle;
+        const encased = document.querySelector('.option-card[data-coupling="encased"]');
+        const moulds = document.querySelector('.option-card[data-coupling="moulds"]');
+        const domes = document.querySelector('.option-card[data-coupling="domes"]');
+        if (substyle === 'sp_up_bte') {
+          encased.classList.add('disabled'); encased.classList.remove('selected');
+          domes.classList.add('disabled'); domes.classList.remove('selected');
+          moulds.classList.add('selected'); moulds.classList.remove('disabled');
+        } else { encased.classList.remove('disabled'); moulds.classList.remove('disabled'); domes.classList.remove('disabled'); }
+      }
+
+      function updateAccessoriesCompatibility() {
+        const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
+        const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
+        const isOticon = range === 'demant' && brand === 'oticon';
+        document.querySelectorAll('.accessory-card[data-accessory^="ot_"]').forEach(card => {
+          card.classList.toggle('disabled', !isOticon);
+          if (!isOticon) card.classList.remove('selected');
+        });
+      }
+
+      function updateAccessoriesChargesCompatibility() {
+        const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
+        const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
+        const recharge = document.querySelector('.option-card[data-recharge].selected')?.dataset.recharge;
+        const isRechargeable = recharge === 'rechargeable';
+        const isNonDemant = range === 'non-demant';
+        const isNonDemantBrand = ['phonak', 'widex', 'starkey', 'signia', 'resound'].includes(brand);
+        const chargersSection = document.getElementById('chargersSection');
+        const chargerCards = chargersSection.querySelectorAll('.accessory-card');
+
+        chargerCards.forEach(card => {
+          const isOticonCharger = card.dataset.accessory.startsWith('ot_');
+          const isNonDemantCharger = card.dataset.accessory === 'non_demant_charger';
+          const isStandardOrSmart = ['standard_charger', 'smart_charger'].includes(card.dataset.accessory);
+
+          card.style.display = isRechargeable ? 'block' : 'none';
+          if (isStandardOrSmart) {
+            card.classList.toggle('disabled', isNonDemant);
+            if (isNonDemant) card.classList.remove('selected');
+          } else if (isOticonCharger) {
+            card.classList.toggle('disabled', !(range === 'demant' && brand === 'oticon' && isRechargeable));
+            if (!(range === 'demant' && brand === 'oticon' && isRechargeable)) card.classList.remove('selected');
+          } else if (isNonDemantCharger) {
+            card.classList.toggle('disabled', !(isNonDemant && isNonDemantBrand && isRechargeable));
+            if (!(isNonDemant && isNonDemantBrand && isRechargeable)) card.classList.remove('selected');
+          } else {
+            card.classList.toggle('disabled', !isRechargeable);
+            if (!isRechargeable) card.classList.remove('selected');
+          }
+        });
+
+        chargersSection.style.display = isRechargeable ? 'block' : 'none';
+      }
+
+      const techPrices = {
+        OT1:{binaural:9998,monaural:4999},
+        OT2:{binaural:8998,monaural:4499},
+        PT1:{binaural:7498,monaural:3749},
+        PT2:{binaural:5898,monaural:2949},
+        EHT1:{binaural_rechargeable:4099.10,monaural_rechargeable:2049.55,binaural_nonrechargeable:4099.10,monaural_nonrechargeable:2049.55},
+        EHT2:{binaural_rechargeable:3300.10,monaural_rechargeable:1650.05,binaural_nonrechargeable:3300.10,monaural_nonrechargeable:1650.05},
+        ET1:{binaural_rechargeable:4099.10,monaural_rechargeable:2049.55,binaural_nonrechargeable:4099.10,monaural_nonrechargeable:2049.55},
+        ET2:{binaural_rechargeable:3300.10,monaural_rechargeable:1650.05,binaural_nonrechargeable:3300.10,monaural_nonrechargeable:1650.05},
+        BF1:{binaural:7000,monaural:3500},
+        BF2:{binaural:5500,monaural:2750},
+        BF3:{binaural:4500,monaural:2250},
+        BF4:{binaural:3500,monaural:1750},
+        Tier1:{binaural_rechargeable:11580,monaural_rechargeable:6015,binaural_nonrechargeable:11130,monaural_nonrechargeable:5565},
+        Tier2:{binaural_rechargeable:9900,monaural_rechargeable:5175,binaural_nonrechargeable:9450,monaural_nonrechargeable:4725},
+        Tier3:{binaural_rechargeable:6900,monaural_rechargeable:3675,binaural_nonrechargeable:6450,monaural_nonrechargeable:3225},
+        Tier4:{binaural_rechargeable:5640,monaural_rechargeable:3045,binaural_nonrechargeable:5190,monaural_nonrechargeable:2595},
+        Tier5:{binaural_rechargeable:3600,monaural_rechargeable:2025,binaural_nonrechargeable:3150,monaural_nonrechargeable:1575},
+        starkey_tier1:{binaural_rechargeable:11028,monaural_rechargeable:5739,binaural_nonrechargeable:10578,monaural_nonrechargeable:5289},
+        starkey_tier2:{binaural_rechargeable:9448,monaural_rechargeable:4949,binaural_nonrechargeable:8998,monaural_nonrechargeable:4499},
+        starkey_tier3:{binaural_rechargeable:6448,monaural_rechargeable:3449,binaural_nonrechargeable:5998,monaural_nonrechargeable:2999},
+        starkey_tier4:{binaural_rechargeable:5088,monaural_rechargeable:2769,binaural_nonrechargeable:4638,monaural_nonrechargeable:2319},
+        starkey_tier5:{binaural_rechargeable:3298,monaural_rechargeable:1875,binaural_nonrechargeable:2848,monaural_nonrechargeable:1424},
+        SP_UP_BTE_PT1:{binaural:8498,monaural:4249},
+        SP_UP_BTE_EH1:{binaural:6498,monaural:3249},
+        SP_UP_BTE_ET1:{binaural:4620,monaural:2460}
+      };
+
+      const couplingPrices = {
+        encased:{binaural:280,monaural:140},
+        moulds:{binaural:350,monaural:175},
+        domes:{binaural:0,monaural:0}
+      };
+
+      const accessoriesPrices = {
+        ot_intent_charger:400, ot_smart_charger:550, standard_charger:400, smart_charger:550, non_demant_charger:450,
+        cros_transmitter:1495, cros_px:1995, usb_adaptor:250, connect_clip:395, phone_adaptor:359, tv_adaptor:350, remote_control:295, edu_mic:1395, domes:0
+      };
+
+      function updateRecommendations() {
+        const selectedGoals = Array.from(document.querySelectorAll('.goal-card.selected')).map(card => card.dataset.goal);
+        const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
+        theBrand = document.querySelector('.brand-card.selected')?.dataset.brand;
+        const techGrid = document.getElementById('techGrid');
+        if (!range || !theBrand || !techGrid || selectedGoals.length === 0) return;
+
+        let recommendedTech = null;
+
+        if (range === 'demant' && theBrand === 'oticon') {
+          if (selectedGoals.some(g => ['crowd','social','dining','music_theatre','noisywork'].includes(g))) recommendedTech = 'OT1';
+          else if (selectedGoals.some(g => ['group','church'].includes(g))) recommendedTech = 'OT2';
+          else if (selectedGoals.includes('meetings')) recommendedTech = 'PT1';
+          else if (selectedGoals.some(g => ['streaming','smallgroup'].includes(g))) recommendedTech = 'PT2';
+          else if (selectedGoals.includes('wind')) recommendedTech = 'EHT1';
+          else if (selectedGoals.includes('phone')) recommendedTech = 'EHT2';
+          else if (selectedGoals.includes('everyday')) recommendedTech = 'ET1';
+          else if (selectedGoals.includes('tinnitus')) recommendedTech = 'ET2';
+        } else if (range === 'demant' && theBrand === 'bernafon') {
+          if (selectedGoals.some(g => ['dining','noisywork','crowd'].includes(g))) recommendedTech = 'BF1';
+          else if (selectedGoals.some(g => ['group','meetings'].includes(g))) recommendedTech = 'BF2';
+          else if (selectedGoals.some(g => ['phone','streaming','smallgroup','wind'].includes(g))) recommendedTech = 'BF3';
+          else if (selectedGoals.includes('tinnitus')) recommendedTech = 'BF4';
+        } else if (range === 'non-demant') {
+          if (selectedGoals.some(g => ['dining','noisywork','music_theatre','social'].includes(g))) recommendedTech = 'Tier1';
+          else if (selectedGoals.some(g => ['group','meetings','church','crowd'].includes(g))) recommendedTech = 'Tier2';
+          else if (selectedGoals.some(g => ['phone','wind','streaming','smallgroup'].includes(g))) recommendedTech = 'Tier3';
+          else if (selectedGoals.some(g => ['onetoone','everyday','tv','tinnitus','phone'].includes(g))) recommendedTech = 'Tier4';
+          else if (selectedGoals.some(g => ['onetoone','everyday','tv','tinnitus'].includes(g))) recommendedTech = 'Tier5';
+        }
+
+        techGrid.querySelectorAll('.tech-card').forEach(card => {
+          card.classList.remove('recommended');
+          if (recommendedTech && card.dataset.tech === recommendedTech && !card.classList.contains('selected')) {
+            card.classList.add('recommended');
+          }
+        });
+      }
+
+      function updateGoalsBasedOnTech(tech) {
+        const range = document.querySelector('.option-card[data-range].selected')?.dataset.range;
+        const brand = document.querySelector('.brand-card.selected')?.dataset.brand;
+        if (!tech || !range || !brand) {
+          document.querySelectorAll('.goal-card').forEach(card => card.classList.remove('selected'));
+          return;
+        }
+        const mapping = range === 'demant' ? goalTechMapping.demant[brand] : goalTechMapping['non-demant'];
+        const techGoals = mapping[tech] || [];
+        document.querySelectorAll('.goal-card').forEach(card => { card.classList.toggle('selected', techGoals.includes(card.dataset.goal)); });
+        updateRecommendations();
+      }
+
+      function updateProgress() {
+        const totalSections = 7;
+        let completed = 0;
+        if (document.querySelector('.option-card[data-range].selected')) completed++;
+        if (document.querySelector('.brand-card.selected')) completed++;
+        if (document.querySelector('.option-card[data-fitting].selected')) completed++;
+        if (document.querySelector('.option-card[data-style].selected')) completed++;
+        if (document.querySelector('.option-card[data-recharge].selected')) completed++;
+        if (document.querySelector('.option-card[data-coupling].selected')) completed++;
+        if (document.querySelector('.option-card[data-funding].selected')) completed++;
+        const progress = (completed / totalSections) * 100;
+        document.getElementById('progress').style.width = `${progress}%`;
+      }
+
+      const goalTechMapping = {
+        demant: {
+          oticon: {
+            OT1:['crowd','social','dining','music_theatre','noisywork','group','church','meetings','streaming','smallgroup','onetoone','tv','tinnitus','everyday','phone','wind'],
+            OT2:['group','church','meetings','streaming','smallgroup','onetoone','tv','tinnitus','everyday','phone','wind'],
+            PT1:['meetings','streaming','smallgroup','onetoone','tv','tinnitus','everyday','phone','wind'],
+            PT2:['streaming','smallgroup','onetoone','tv','tinnitus','everyday','phone'],
+            EHT1:['onetoone','tv','tinnitus','everyday','phone','wind'],
+            EHT2:['onetoone','tv','tinnitus','everyday','phone'],
+            ET1:['onetoone','tv','tinnitus','everyday'],
+            ET2:['onetoone','tv','tinnitus'],
+            SP_UP_BTE_PT1:['meetings','streaming','smallgroup','onetoone','tv','tinnitus','everyday','phone','wind'],
+            SP_UP_BTE_EH1:['onetoone','tv','tinnitus','everyday','phone','wind'],
+            SP_UP_BTE_ET1:['onetoone','tv','tinnitus','everyday']
+          },
+          bernafon: {
+            BF1:['dining','noisywork','crowd','group','meetings','smallgroup','wind','streaming','phone','tv','onetoone','everyday','tinnitus'],
+            BF2:['group','meetings','smallgroup','wind','streaming','phone','tv','onetoone','everyday'],
+            BF3:['phone','streaming','smallgroup','wind','tv','onetoone','everyday','tinnitus'],
+            BF4:['phone','tv','onetoone','everyday','tinnitus']
+          }
+        },
+        'non-demant': {
+          Tier1:['dining','noisywork','music_theatre','social'],
+          Tier2:['group','meetings','church','crowd'],
+          Tier3:['phone','wind','streaming','smallgroup'],
+          Tier4:['onetoone','everyday','tv','tinnitus','phone'],
+          Tier5:['onetoone','everyday','tv','tinnitus']
+        }
+      };
+
+      function calculatePrice() {
+        const range = document.querySelector('.option-card[data-range].selected')?.dataset.range || 'N/A';
+        const brand = document.querySelector('.brand-card.selected')?.dataset.brand || 'N/A';
+        const fitting = document.querySelector('.option-card[data-fitting].selected')?.dataset.fitting || 'N/A';
+        const style = document.querySelector('.option-card[data-style].selected')?.dataset.style || 'N/A';
+        const substyle = document.querySelector('.substyle-card.selected')?.dataset.substyle || '';
+        const recharge = document.querySelector('.option-card[data-recharge].selected')?.dataset.recharge || 'N/A';
+        const coupling = document.querySelector('.option-card[data-coupling].selected')?.dataset.coupling || '';
+        const fundingOptions = Array.from(document.querySelectorAll('.option-card[data-funding].selected')).map(card => card.dataset.funding);
+        let tech = document.querySelector('.tech-card.selected')?.dataset.tech || '';
+        const recommendedTech = document.querySelector('.tech-card.recommended')?.dataset.tech || '';
+
+        const clientName = document.getElementById('clientName')?.innerText || 'N/A';
+        const clinicName = document.getElementById('clinicName')?.innerText || 'N/A';
+        const dateInput = document.getElementById('dateInput')?.innerText || '12/06/2025';
+
+        const insuranceAmount = fundingOptions.includes('insurance') ? parseFloat(document.getElementById('funding-amount').value) || 0 : 0;
+        const manualDiscount = parseFloat(document.getElementById('manualDiscount').value) || 0;
+        const discountAmount = parseFloat(document.getElementById('discountAmount').value) || 0;
+        const selectedAccessories = Array.from(document.querySelectorAll('.accessory-card.selected')).map(card => card.dataset.accessory);
+        const selectedGoals = Array.from(document.querySelectorAll('.goal-card.selected')).map(card => {
+          const text = card.textContent.trim().replace(/\n.*$/, '');
+          return text === '1:1' ? 'One-to-One' : text.charAt(0).toUpperCase() + text.slice(1).replace(/([A-Z])/g, ' $1');
+        });
+
+        if (range === 'N/A' || brand === 'N/A' || fitting === 'N/A' || style === 'N/A') { alert('Please complete all required selections: Products, Brand, Fitting, Style.'); return; }
+
+        if (!tech && recommendedTech) { tech = recommendedTech; document.querySelector(`.tech-card[data-tech="${tech}"]`)?.classList.add('selected'); }
+        if (!tech) { alert('Please select a Technology Level or ensure Listening Goals are set to generate a recommendation.'); return; }
+
+        let priceKey = tech;
+        if (range === 'non-demant' && brand === 'starkey') { priceKey = `starkey_${tech.toLowerCase()}`; }
+
+        if (!techPrices[priceKey]) { alert(`Invalid pricing configuration for technology level: ${tech}.`); return; }
+
+        const isDemantOticonOptimalPremium = range === 'demant' && brand === 'oticon' && ['OT1','OT2','PT1','PT2'].includes(tech);
+        const isSPUPBTE = substyle === 'sp_up_bte';
+        const isRechargeable = recharge === 'rechargeable';
+
+        let basePrice = 0;
+        if (isSPUPBTE || isDemantOticonOptimalPremium) {
+          basePrice = fitting === 'binaural' ? techPrices[priceKey].binaural : techPrices[priceKey].monaural;
+        } else {
+          const priceType = isRechargeable ? `${fitting}_rechargeable` : `${fitting}_nonrechargeable`;
+          basePrice = techPrices[priceKey][priceType] || 0;
+        }
+
+        const couplingCost = (couplingPrices[coupling]?.[fitting]) || 0;
+
+        const accessoriesCost = selectedAccessories.reduce((sum, acc) => {
+          const cost = accessoriesPrices[acc] || 0;
+          if (acc !== 'others' && cost > 0) sum += cost;
+          return sum;
+        }, 0);
+
+        const additionalCosts = accessoriesCost + couplingCost;
+
+        let fundingDiscount = 0;
+        if (fundingOptions.includes('moh')) fundingDiscount += 1022.22;
+        if (fundingOptions.includes('acc1')) fundingDiscount += 3300.10;
+        if (fundingOptions.includes('acc2')) fundingDiscount += 3150;
+        if (fundingOptions.includes('acc3')) fundingDiscount += 3150;
+        if (fundingOptions.includes('insurance')) fundingDiscount += insuranceAmount;
+
+        const totalDiscount = manualDiscount + discountAmount;
+        const basePlusAccessories = basePrice + additionalCosts;
+        const netPrice = basePlusAccessories - fundingDiscount - totalDiscount;
+
+        const techLevelsOrder = {
+          demant: { oticon: ['OT1','OT2','PT1','PT2','EHT1','EHT2','ET1','ET2','SP_UP_BTE_PT1','SP_UP_BTE_EH1','SP_UP_BTE_ET1'], bernafon: ['BF1','BF2','BF3','BF4'] },
+          'non-demant': { starkey: ['Tier1','Tier2','Tier3','Tier4','Tier5'], other: ['Tier1','Tier2','Tier3','Tier4','Tier5'] }
+        };
+
+        let secondRecommendation = tech;
+        const currentTechOrder = range === 'demant' ? techLevelsOrder.demant[brand] : techLevelsOrder['non-demant'][brand === 'starkey' ? 'starkey' : 'other'];
+        const currentIndex = currentTechOrder.indexOf(tech);
+        if (currentIndex < currentTechOrder.length - 1) { secondRecommendation = currentTechOrder[currentIndex + 1]; }
+
+        let secondBasePrice = 0;
+        let secondPriceKey = secondRecommendation;
+        if (range === 'non-demant' && brand === 'starkey') { secondPriceKey = `starkey_${secondRecommendation.toLowerCase()}`; }
+        if (techPrices[secondPriceKey]) {
+          if (isSPUPBTE || isDemantOticonOptimalPremium) {
+            secondBasePrice = fitting === 'binaural' ? techPrices[secondPriceKey].binaural : techPrices[secondPriceKey].monaural;
+          } else {
+            const priceType = isRechargeable ? `${fitting}_rechargeable` : `${fitting}_nonrechargeable`;
+            secondBasePrice = techPrices[secondPriceKey][priceType] || 0;
+          }
+        }
+        const secondNetPrice = secondBasePrice + additionalCosts - fundingDiscount - totalDiscount;
+
+        let additionalDetails = '';
+        const selectedCharger = selectedAccessories.find(acc => acc.includes('charger'));
+        if (selectedCharger) { additionalDetails += `${selectedCharger.replace(/_/g,' ').replace('ot','OT').replace(/\b\w/g,c=>c.toUpperCase())} - $${accessoriesPrices[selectedCharger].toFixed(2)}<br>`; }
+        if (couplingCost && coupling !== 'domes') {
+          if (coupling === 'moulds') { additionalDetails += `Moulds - $${couplingCost.toFixed(2)} <small>($${(couplingCost / (fitting === 'binaural' ? 2 : 1)).toFixed(2)} each)</small><br>`; }
+          else { additionalDetails += `${coupling.charAt(0).toUpperCase()+coupling.slice(1)} - $${couplingCost.toFixed(2)}<br>`; }
+        }
+        selectedAccessories.forEach(acc => {
+          const cost = accessoriesPrices[acc] || 0;
+          if (acc !== 'others' && acc !== selectedCharger && cost > 0) {
+            additionalDetails += `${acc.replace(/_/g,' ').replace('ot','OT').replace(/\b\w/g,c=>c.toUpperCase())} - $${cost.toFixed(2)}<br>`;
+          }
+        });
+
+        const formattedAccessories = selectedAccessories
+          .filter(acc => acc !== 'others' && accessoriesPrices[acc] > 0 && !acc.includes('charger'))
+          .map(acc => acc.replace(/_/g,' ').replace('ot','OT ').replace(/\b\w/g,c=>c.toUpperCase()))
+          .join(', ') || '';
+        const formattedChargers = selectedAccessories
+          .filter(acc => acc.includes('charger') && accessoriesPrices[acc] > 0)
+          .map(acc => acc.replace(/_/g,' ').replace('ot','OT ').replace(/\b\w/g,c=>c.toUpperCase()))
+          .join(', ') || '';
+        const accessoriesSummary = [];
+        if (formattedChargers) accessoriesSummary.push(formattedChargers);
+        if (formattedAccessories) accessoriesSummary.push(formattedAccessories);
+        const finalAccessories = accessoriesSummary.join(', ') || 'None';
+
+        const selectionsSummary = `
+          <div class="selections-summary">
+            <h4>Selected Options</h4>
+            <ul>
+              <li><strong>Listening Goals:</strong> ${selectedGoals.length > 0 ? selectedGoals.join(', ') : 'None'}</li>
+              <li><strong>Technology Level:</strong> ${tech}</li>
+              <li><strong>Accessories:</strong> ${finalAccessories}</li>
+            </ul>
+          </div>
+        `;
+
+        const output = `
+          <div class="header-info">
+            <div class="header-row">
+              <div class="price-card teal-text">Fitting: ${fitting.charAt(0).toUpperCase() + fitting.slice(1)}</div>
+              <div class="price-card teal-text">Charging: ${recharge.charAt(0).toUpperCase() + recharge.slice(1)}</div>
+              <div class="price-card teal-text">Style: ${style.toUpperCase()}${substyle ? ' - ' + substyle.toUpperCase() : ''}</div>
+              <div class="price-card teal-text">Coupling: ${coupling.charAt(0).toUpperCase() + coupling.slice(1)}</div>
+            </div>
+          </div>
+          ${selectionsSummary}
+          <table class="recommendation-table">
+            <tr>
+              <th>Options</th><th>Technology</th><th>Brand</th><th>Base Price</th><th>Funding</th><th>Accessories</th><th>Discount</th><th>Net Price</th>
+            </tr>
+            <tr>
+              <td>A</td>
+              <td>${tech}</td>
+              <td>${brand.charAt(0).toUpperCase() + brand.slice(1)}</td>
+              <td>$${basePrice.toFixed(2)}</td>
+              <td>$${fundingDiscount.toFixed(2)}</td>
+              <td>${additionalCosts > 0 ? `$${additionalCosts.toFixed(2)}` : 'None'}</td>
+              <td>$${totalDiscount.toFixed(2)}</td>
+              <td>$${netPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td>B</td>
+              <td>${secondRecommendation.replace(/SP_UP_BTE_/g, '').replace(/_/g, ' ')}</td>
+              <td>${brand.charAt(0).toUpperCase() + brand.slice(1)}</td>
+              <td>$${secondBasePrice.toFixed(2)}</td>
+              <td>$${fundingDiscount.toFixed(2)}</td>
+              <td>${additionalCosts > 0 ? `$${additionalCosts.toFixed(2)}` : 'None'}</td>
+              <td>$${totalDiscount.toFixed(2)}</td>
+              <td>$${secondNetPrice.toFixed(2)}</td>
+            </tr>
+          </table>
+          ${additionalCosts > 0 && additionalDetails ? `<div class="price-card additional-costs-teal" style="text-align: left;">Additional Costs:<br>${additionalDetails}</div>` : ''}
+          ${manualDiscount > 0 ? `<div class="price-card" style="text-align: left;">Manual Discount: -$${manualDiscount.toFixed(2)}</div>` : ''}
+          ${discountAmount > 0 ? `<div class="price-card" style="text-align: left;">Discount: -$${discountAmount.toFixed(2)}</div>` : ''}
+          <div class="validity-note">This quote is valid for 30 days from ${new Date().toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland' })}<sup>*</sup></div>
+          <div class="audika-advantage">
+            <strong>Audika Advantage<sup>*</sup>:</strong>
+            <ul>
+              <li>Device Loss and Damage Cover</li>
+              <li>60-day change of mind period</li>
+              <li>4 Year Device Warranty</li>
+              <li>Payment Plan</li>
+            </ul>
+            <div class="audika-link">For more details, visit: <a href="https://www.audika.co.nz/terms-and-conditions/audika-ear">https://www.audika.co.nz/audika-ear</a></div>
+          </div>
+          <div class="terms-conditions">* Terms and Conditions</div>
+        `;
+
+        const priceOutput = document.getElementById('priceOutput');
+        if (priceOutput) {
+          priceOutput.innerHTML = output;
+          document.querySelector('.quote-left .client-info').style.display = 'flex';
+          document.getElementById('discountInputDiv').style.display = 'block';
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+      }
+    });
+  </script>
 </body>
 </html>
